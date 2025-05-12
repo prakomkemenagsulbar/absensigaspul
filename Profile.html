@@ -1,0 +1,628 @@
+<!-- File: Profile.html -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GASPUL Hadir - Profil Pengguna</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <?!= include('CSS'); ?>
+    <?!= include('Navigation'); ?>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header>
+        <div class="logo">
+          <span class="check-icon">✓</span> GASPUL Hadir
+        </div>
+        <nav class="top-nav">
+          <a href="#" data-page="home" id="nav-home">Beranda</a>
+          <a href="#" data-page="history" id="nav-history">Riwayat</a>
+          <a href="#" data-page="profile" id="nav-profile" class="active">Profil</a>
+        </nav>
+        <div class="header-user-info">
+          <div class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </div>
+          <div class="user">
+            <div class="user-avatar" id="userAvatar">A</div>
+            <span id="userName">User</span>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Main Content -->
+      <main>
+        <!-- Profile Header Section -->
+        <div class="profile-header">
+          <div class="profile-avatar" id="profileAvatar">A</div>
+          <h2 class="profile-name" id="profileName">Loading...</h2>
+          <div class="profile-position" id="profilePosition">Loading...</div>
+        </div>
+        
+        <!-- Profile Info Section -->
+        <div class="profile-info">
+          <!-- Personal Info -->
+          <div class="card info-section">
+            <h3 class="info-title"><i class="fas fa-user-circle"></i> Informasi Pribadi</h3>
+            
+            <div class="info-row">
+              <div class="info-label">NIP</div>
+              <div class="info-value" id="profileNIP">-</div>
+            </div>
+            
+            <div class="info-row">
+              <div class="info-label">Email</div>
+              <div class="info-value" id="profileEmail">-</div>
+            </div>
+            
+            <div class="info-row">
+              <div class="info-label">Unit Kerja</div>
+              <div class="info-value" id="profileUnit">-</div>
+            </div>
+            
+            <div class="info-row">
+              <div class="info-label">Terdaftar Sejak</div>
+              <div class="info-value" id="profileRegDate">-</div>
+            </div>
+          </div>
+          
+          <!-- Attendance Stats -->
+          <div class="card info-section">
+            <h3 class="info-title"><i class="fas fa-chart-line"></i> Statistik Kehadiran</h3>
+            
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-value" id="presentDays">0</div>
+                <div class="stat-label">Hari Hadir</div>
+              </div>
+              
+              <div class="stat-card">
+                <div class="stat-value" id="leaveDays">0 Hari</div>
+                <div class="stat-label">Izin/Sakit</div>
+              </div>
+              
+              <div class="stat-card">
+                <div class="stat-value" id="attendancePercentage">0%</div>
+                <div class="stat-label">Kehadiran</div>
+              </div>
+            </div>
+            
+            <!-- Work Hours Stats -->
+            <h4 class="mt-4"><i class="fas fa-clock"></i> Ringkasan Jam Kerja Bulan Ini</h4>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-value" id="avgWorkHours">0:00</div>
+                <div class="stat-label">Rata-rata Jam Kerja</div>
+              </div>
+              
+              <div class="stat-card">
+                <div class="stat-value" id="totalWorkHours">0:00</div>
+                <div class="stat-label">Total Jam Kerja</div>
+              </div>
+              
+              <div class="stat-card">
+                <div class="stat-value" id="longestWorkDay">0:00</div>
+                <div class="stat-label">Hari Terlama</div>
+              </div>
+            </div>
+            
+            <!-- Work Hours Chart -->
+            <h4 class="mt-4"><i class="fas fa-chart-bar"></i> Rata-rata Jam Kerja per Hari</h4>
+            <div class="chart-container">
+              <div class="chart-placeholder work-hours-chart">
+                <!-- Akan diisi oleh JavaScript -->
+              </div>
+            </div>
+          </div>
+          
+          <!-- Account Settings -->
+          <div class="card info-section">
+            <h3 class="info-title"><i class="fas fa-cog"></i> Pengaturan Akun</h3>
+            
+            <!-- Change Password Form -->
+            <div class="form-container">
+              <div class="form-group">
+                <label for="currentPassword">Password Saat Ini</label>
+                <input type="password" id="currentPassword" placeholder="Masukkan password saat ini">
+                <div id="currentPassword-error" class="error-message"></div>
+              </div>
+              
+              <div class="form-group">
+                <label for="newPassword">Password Baru</label>
+                <input type="password" id="newPassword" placeholder="Masukkan password baru">
+                <div id="newPassword-error" class="error-message"></div>
+              </div>
+              
+              <div class="form-group">
+                <label for="confirmPassword">Konfirmasi Password</label>
+                <input type="password" id="confirmPassword" placeholder="Konfirmasi password baru">
+                <div id="confirmPassword-error" class="error-message"></div>
+              </div>
+              
+              <button id="changePasswordButton" class="btn btn-primary">
+                <i class="fas fa-key"></i> Ubah Password
+              </button>
+            </div>
+          </div>
+          
+          <!-- Actions Section -->
+          <div class="card">
+            <h3 class="info-title"><i class="fas fa-file-export"></i> Laporan & Ekspor</h3>
+            <div class="profile-actions">
+              <button id="exportProfileBtn" class="btn btn-info">
+                <i class="fas fa-file-pdf"></i> Ekspor Laporan
+              </button>
+              <button id="sendMonthlyReportBtn" class="btn btn-primary">
+                <i class="fas fa-envelope"></i> Kirim Laporan Bulanan
+              </button>
+              <button id="logoutButton" class="btn btn-danger">
+                <i class="fas fa-sign-out-alt"></i> Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+      
+      <!-- Footer -->
+      <footer>
+        <div class="footer-content">
+          <p>© 2025 GASPUL Hadir - Aplikasi Absensi Modern</p>
+        </div>
+      </footer>
+    </div>
+    
+    <!-- Bottom Navigation for Mobile -->
+    <nav class="bottom-nav">
+      <a href="#" data-page="home" id="nav-home-mobile">
+        <i class="fas fa-clock nav-icon"></i>
+        <span>Absensi</span>
+      </a>
+      <a href="#" data-page="history" id="nav-history-mobile">
+        <i class="fas fa-history nav-icon"></i>
+        <span>Riwayat</span>
+      </a>
+      <a href="#" data-page="profile" id="nav-profile-mobile" class="active">
+        <i class="fas fa-user nav-icon"></i>
+        <span>Profil</span>
+      </a>
+    </nav>
+    
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" style="display: none;">
+      <div class="loading-spinner"></div>
+      <div class="loading-message">Memuat...</div>
+    </div>
+    
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+    
+    <!-- JavaScript untuk halaman Profile -->
+    <script>
+      /**
+       * Load data profil pengguna
+       */
+      function loadProfileData() {
+        showLoading("Memuat data profil...");
+        
+        google.script.run
+          .withSuccessHandler(function(result) {
+            hideLoading();
+            
+            if (!result) {
+              showNotification("Sesi telah berakhir. Silakan login kembali.", "error");
+              navigateTo('login');
+              return;
+            }
+            
+            // Update UI dengan data pengguna
+            updateProfileUI(result);
+            
+            // Load statistik jam kerja
+            loadWorkHoursStats();
+          })
+          .withFailureHandler(function(error) {
+            hideLoading();
+            showNotification("Error: " + error, "error");
+          })
+          .getUserProfile();
+      }
+      
+      /**
+       * Update UI profil dengan data pengguna
+       * @param {Object} user - Data pengguna
+       */
+      function updateProfileUI(user) {
+        // Avatar dan nama
+        const avatarElement = document.getElementById('profileAvatar');
+        if (avatarElement) {
+          if (user.avatar) {
+            avatarElement.innerHTML = `<img src="${user.avatar}" alt="${user.name}" />`;
+          } else {
+            // Tampilkan inisial jika tidak ada avatar
+            const initial = user.name.charAt(0).toUpperCase();
+            avatarElement.textContent = initial;
+          }
+        }
+        
+        // Update semua elemen dengan data pengguna
+        updateElementText('profileName', user.name);
+        updateElementText('profilePosition', user.position || 'Tidak ada jabatan');
+        updateElementText('profileNIP', user.nip);
+        updateElementText('profileEmail', user.email);
+        updateElementText('profileUnit', user.unit || 'Tidak ada unit');
+        
+        // Format tanggal registrasi
+        if (user.registerDate) {
+          updateElementText('profileRegDate', formatDateID(user.registerDate));
+        } else {
+          updateElementText('profileRegDate', 'Tidak tersedia');
+        }
+        
+        // Update statistik
+        if (user.stats) {
+          updateElementText('presentDays', user.stats.presentDays);
+          updateElementText('leaveDays', user.stats.leaveDays + ' Hari');
+          updateElementText('attendancePercentage', user.stats.attendancePercentage + '%');
+        }
+        
+        // Juga update nama di header
+        updateElementText('userName', user.name);
+        
+        // Perbarui inisial di avatar header
+        const userAvatarElement = document.getElementById('userAvatar');
+        if (userAvatarElement) {
+          userAvatarElement.textContent = user.name.charAt(0).toUpperCase();
+        }
+      }
+      
+      /**
+       * Load statistik jam kerja
+       */
+      function loadWorkHoursStats() {
+        google.script.run
+          .withSuccessHandler(function(stats) {
+            if (!stats) return;
+            
+            // Update statistik jam kerja
+            updateElementText('avgWorkHours', stats.averageHours || '0:00');
+            updateElementText('totalWorkHours', stats.totalHours || '0:00');
+            updateElementText('longestWorkDay', stats.longestDay || '0:00');
+            
+            // Update grafik jam kerja jika data tersedia
+            if (stats.dailyAverage) {
+              updateWorkHoursChart(stats.dailyAverage);
+            }
+          })
+          .withFailureHandler(function(error) {
+            console.error("Error loading work hours stats:", error);
+          })
+          .getWorkHoursStats();
+      }
+      
+      /**
+       * Update grafik jam kerja per hari
+       * @param {Object} dailyData - Data jam kerja per hari
+       */
+      function updateWorkHoursChart(dailyData) {
+        const chartContainer = document.querySelector('.work-hours-chart');
+        if (!chartContainer) return;
+        
+        // Kosongkan chart container
+        chartContainer.innerHTML = '';
+        
+        // Mendapatkan nilai maksimum untuk scaling
+        const values = Object.values(dailyData).map(val => {
+          if (!val || val === '0:00') return 0;
+          const [hours, minutes] = val.split(':').map(Number);
+          return hours + (minutes / 60);
+        });
+        
+        const maxHours = Math.max(...values, 1); // Minimal 1 jam untuk skala
+        
+        // Label hari
+        const dayLabels = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+        
+        // Buat bar untuk setiap hari
+        for (let i = 0; i < 7; i++) {
+          let timeStr = dailyData[i] || '0:00';
+          const [hours, minutes] = timeStr.split(':').map(Number);
+          const hoursValue = hours + (minutes / 60);
+          const percentage = (hoursValue / maxHours) * 100;
+          
+          const barElement = document.createElement('div');
+          barElement.className = 'chart-bar';
+          barElement.style.height = percentage + '%';
+          
+          const labelElement = document.createElement('div');
+          labelElement.className = 'chart-label';
+          labelElement.textContent = dayLabels[i];
+          
+          barElement.appendChild(labelElement);
+          chartContainer.appendChild(barElement);
+        }
+      }
+      
+      /**
+       * Format tanggal dalam format Indonesia
+       * @param {string} dateString - String tanggal
+       * @return {string} - Tanggal yang diformat
+       */
+      function formatDateID(dateString) {
+        const date = new Date(dateString);
+        const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        
+        return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+      }
+      
+      /**
+       * Helper untuk mengatur teks elemen
+       * @param {string} elementId - ID elemen
+       * @param {string} text - Teks yang akan diset
+       */
+      function updateElementText(elementId, text) {
+        const element = document.getElementById(elementId);
+        if (element) element.textContent = text;
+      }
+      
+      /**
+       * Fungsi untuk mengubah password
+       */
+      function changePassword() {
+        // Ambil nilai dari form
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        
+        // Reset pesan error
+        clearErrors();
+        
+        // Validasi input
+        let isValid = true;
+        
+        if (!currentPassword) {
+          showInputError('currentPassword', 'Password saat ini harus diisi');
+          isValid = false;
+        }
+        
+        if (!newPassword) {
+          showInputError('newPassword', 'Password baru harus diisi');
+          isValid = false;
+        } else if (newPassword.length < 6) {
+          showInputError('newPassword', 'Password baru minimal 6 karakter');
+          isValid = false;
+        }
+        
+        if (!confirmPassword) {
+          showInputError('confirmPassword', 'Konfirmasi password harus diisi');
+          isValid = false;
+        } else if (confirmPassword !== newPassword) {
+          showInputError('confirmPassword', 'Konfirmasi password tidak cocok');
+          isValid = false;
+        }
+        
+        if (!isValid) return;
+        
+        // Tampilkan loading
+        showLoading("Mengubah password...");
+        
+        // Panggil fungsi server
+        google.script.run
+          .withSuccessHandler(function(result) {
+            hideLoading();
+            
+            if (result.success) {
+              showNotification(result.message || "Password berhasil diubah", "success");
+              
+              // Reset form
+              document.getElementById('currentPassword').value = '';
+              document.getElementById('newPassword').value = '';
+              document.getElementById('confirmPassword').value = '';
+            } else {
+              showNotification(result.message || "Gagal mengubah password", "error");
+            }
+          })
+          .withFailureHandler(function(error) {
+            hideLoading();
+            showNotification("Error: " + error, "error");
+          })
+          .changePassword(currentPassword, newPassword);
+      }
+      
+      /**
+       * Ekspor profil ke PDF
+       */
+      function exportProfile() {
+        showLoading("Menyiapkan laporan profil...");
+        
+        google.script.run
+          .withSuccessHandler(function(result) {
+            hideLoading();
+            
+            if (result.success) {
+              showNotification("Laporan profil berhasil diekspor ke Google Drive Anda", "success");
+            } else {
+              showNotification(result.message || "Gagal mengekspor profil", "error");
+            }
+          })
+          .withFailureHandler(function(error) {
+            hideLoading();
+            showNotification("Error: " + error, "error");
+          })
+          .exportProfileReport();
+      }
+      
+      /**
+       * Kirim laporan bulanan via email
+       */
+      function sendMonthlyReport() {
+        showLoading("Mengirim laporan bulanan...");
+        
+        const date = new Date();
+        const month = date.getMonth() + 1;
+        const year = date.getFullYear();
+        
+        google.script.run
+          .withSuccessHandler(function(result) {
+            hideLoading();
+            
+            if (result.success) {
+              showNotification(result.message || "Laporan berhasil dikirim ke email Anda", "success");
+            } else {
+              showNotification(result.message || "Gagal mengirim laporan", "error");
+            }
+          })
+          .withFailureHandler(function(error) {
+            hideLoading();
+            showNotification("Error: " + error, "error");
+          })
+          .sendReport(month, year);
+      }
+      
+      /**
+       * Logout pengguna
+       */
+      function logout() {
+        showLoading("Memproses logout...");
+        
+        google.script.run
+          .withSuccessHandler(function(result) {
+            hideLoading();
+            
+            if (result.success) {
+              navigateTo('login');
+            } else {
+              showNotification(result.message || "Gagal logout", "error");
+            }
+          })
+          .withFailureHandler(function(error) {
+            hideLoading();
+            showNotification("Error: " + error, "error");
+          })
+          .logout();
+      }
+      
+      /**
+       * Tampilkan error pada input
+       * @param {string} inputId - ID elemen input
+       * @param {string} message - Pesan error
+       */
+      function showInputError(inputId, message) {
+        const input = document.getElementById(inputId);
+        const errorElement = document.getElementById(inputId + '-error');
+        
+        if (input) input.classList.add('error');
+        if (errorElement) errorElement.textContent = message;
+      }
+      
+      /**
+       * Bersihkan semua error
+       */
+      function clearErrors() {
+        const errorElements = document.querySelectorAll('.error-message');
+        const inputElements = document.querySelectorAll('input.error');
+        
+        errorElements.forEach(function(element) {
+          element.textContent = '';
+        });
+        
+        inputElements.forEach(function(input) {
+          input.classList.remove('error');
+        });
+      }
+      
+      /**
+       * Tampilkan loading overlay
+       * @param {string} message - Pesan loading
+       */
+      function showLoading(message) {
+        const overlay = document.getElementById('loading-overlay');
+        const messageElement = overlay.querySelector('.loading-message');
+        
+        messageElement.textContent = message || 'Memuat...';
+        overlay.style.display = 'flex';
+      }
+      
+      /**
+       * Sembunyikan loading overlay
+       */
+      function hideLoading() {
+        document.getElementById('loading-overlay').style.display = 'none';
+      }
+      
+      /**
+       * Tampilkan notifikasi
+       * @param {string} message - Pesan notifikasi
+       * @param {string} type - Tipe notifikasi (success/error/warning/info)
+       */
+      function showNotification(message, type) {
+        const container = document.getElementById('notification-container');
+        
+        // Buat elemen notifikasi
+        const notification = document.createElement('div');
+        notification.className = 'notification ' + (type || 'info');
+        notification.textContent = message;
+        
+        // Tambahkan ke container
+        container.appendChild(notification);
+        
+        // Hilangkan setelah beberapa detik
+        setTimeout(() => {
+          notification.classList.add('fade-out');
+          setTimeout(() => {
+            notification.remove();
+          }, 500);
+        }, 5000);
+      }
+      
+      /**
+       * Inisialisasi halaman
+       */
+      function initializePage() {
+        // Muat data profil
+        loadProfileData();
+        
+        // Event listener untuk tombol ubah password
+        const changePasswordButton = document.getElementById('changePasswordButton');
+        if (changePasswordButton) {
+          changePasswordButton.addEventListener('click', changePassword);
+        }
+        
+        // Event listener untuk tombol ekspor
+        const exportProfileBtn = document.getElementById('exportProfileBtn');
+        if (exportProfileBtn) {
+          exportProfileBtn.addEventListener('click', exportProfile);
+        }
+        
+        // Event listener untuk tombol laporan bulanan
+        const sendMonthlyReportBtn = document.getElementById('sendMonthlyReportBtn');
+        if (sendMonthlyReportBtn) {
+          sendMonthlyReportBtn.addEventListener('click', sendMonthlyReport);
+        }
+        
+        // Event listener untuk tombol logout
+        const logoutButton = document.getElementById('logoutButton');
+        if (logoutButton) {
+          logoutButton.addEventListener('click', logout);
+        }
+        
+        // Event listener untuk input field (clear error on input)
+        document.querySelectorAll('input').forEach(function(input) {
+          input.addEventListener('input', function() {
+            this.classList.remove('error');
+            const errorElement = document.getElementById(this.id + '-error');
+            if (errorElement) errorElement.textContent = '';
+          });
+        });
+      }
+      
+      // Jalankan inisialisasi saat DOM selesai dimuat
+      document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+    
+    <?!= include('JavaScript'); ?>
+  </body>
+</html>

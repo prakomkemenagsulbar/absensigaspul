@@ -1,0 +1,726 @@
+<!-- File: History.html -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GASPUL Hadir - Riwayat Absensi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <?!= include('CSS'); ?>
+    <?!= include('Navigation'); ?>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header>
+        <div class="logo">
+          <span class="check-icon">✓</span> GASPUL Hadir
+        </div>
+        <nav class="top-nav">
+          <a href="#" data-page="home" id="nav-home">Beranda</a>
+          <a href="#" data-page="history" id="nav-history" class="active">Riwayat</a>
+          <a href="#" data-page="profile" id="nav-profile">Profil</a>
+        </nav>
+        <div class="header-user-info">
+          <div class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </div>
+          <div class="user">
+            <div class="user-avatar" id="userAvatar">A</div>
+            <span id="userName">User</span>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Main Content -->
+      <main>
+        <h2 class="page-title">Riwayat Absensi</h2>
+        
+        <!-- Filter Section -->
+        <div class="card filter-container">
+          <div class="filter-group">
+            <label for="month">Bulan:</label>
+            <select id="month" class="form-control">
+              <option value="1">Januari</option>
+              <option value="2">Februari</option>
+              <option value="3">Maret</option>
+              <option value="4">April</option>
+              <option value="5">Mei</option>
+              <option value="6">Juni</option>
+              <option value="7">Juli</option>
+              <option value="8">Agustus</option>
+              <option value="9">September</option>
+              <option value="10">Oktober</option>
+              <option value="11">November</option>
+              <option value="12">Desember</option>
+            </select>
+          </div>
+          
+          <div class="filter-group">
+            <label for="year">Tahun:</label>
+            <select id="year" class="form-control">
+              <option value="2025">2025</option>
+              <option value="2024">2024</option>
+            </select>
+          </div>
+          
+          <!-- Filter status -->
+          <div class="filter-group">
+            <label for="status">Status:</label>
+            <select id="status" class="form-control">
+              <option value="all">Semua</option>
+              <option value="hadir">Hadir</option>
+              <option value="terlambat">Terlambat</option>
+              <option value="izin">Izin</option>
+              <option value="sakit">Sakit</option>
+              <option value="cuti">Cuti</option>
+            </select>
+          </div>
+          
+          <div class="filter-button">
+            <button id="filterButton" class="btn btn-primary">
+              <i class="fas fa-filter"></i> Tampilkan
+            </button>
+          </div>
+        </div>
+        
+        <!-- History Table -->
+        <div class="card">
+          <div class="table-container">
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th>Tanggal</th>
+                  <th>Jam Masuk</th>
+                  <th>Jam Pulang</th>
+                  <th>Status</th>
+                  <th>Lokasi</th>
+                  <th>Total Jam</th>
+                  <th>Keterangan</th>
+                </tr>
+              </thead>
+              <tbody id="historyTableBody">
+                <!-- Data will be inserted here by JavaScript -->
+                <tr>
+                  <td colspan="7" class="text-center">Memuat data...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <!-- Summary Section -->
+        <div class="card">
+          <h3><i class="fas fa-chart-bar"></i> Ringkasan</h3>
+          <div class="summary-container">
+            <div class="summary-item">
+              <div class="summary-label">Total Hari Kerja:</div>
+              <div id="totalWorkDays" class="summary-value">0</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-label">Hadir:</div>
+              <div id="totalPresent" class="summary-value">0</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-label">Terlambat:</div>
+              <div id="totalLate" class="summary-value">0</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-label">Izin/Sakit:</div>
+              <div id="totalLeave" class="summary-value">0</div>
+            </div>
+            <!-- Total Jam Kerja -->
+            <div class="summary-item highlight">
+              <div class="summary-label">Total Jam Kerja:</div>
+              <div id="totalWorkHours" class="summary-value">0:00</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Grafik Jam Kerja -->
+        <div class="card">
+          <h3><i class="fas fa-clock"></i> Jam Kerja Per Hari</h3>
+          <div class="chart-container work-hours-chart">
+            <!-- Akan diisi oleh JavaScript -->
+          </div>
+        </div>
+        
+        <!-- Export Options -->
+        <div class="card">
+          <h3><i class="fas fa-file-export"></i> Ekspor Data</h3>
+          <div class="export-container">
+            <button id="exportPdfButton" class="btn btn-info">
+              <i class="fas fa-file-pdf"></i> Ekspor PDF
+            </button>
+            <button id="exportExcelButton" class="btn btn-success">
+              <i class="fas fa-file-excel"></i> Ekspor Excel
+            </button>
+            <button id="sendEmailButton" class="btn btn-primary">
+              <i class="fas fa-envelope"></i> Kirim Laporan ke Email
+            </button>
+          </div>
+        </div>
+      </main>
+      
+      <!-- Footer -->
+      <footer>
+        <div class="footer-content">
+          <p>© 2025 GASPUL Hadir - Aplikasi Absensi Modern</p>
+        </div>
+      </footer>
+    </div>
+    
+    <!-- Bottom Navigation for Mobile -->
+    <nav class="bottom-nav">
+      <a href="#" data-page="home" id="nav-home-mobile">
+        <i class="fas fa-clock nav-icon"></i>
+        <span>Absensi</span>
+      </a>
+      <a href="#" data-page="history" id="nav-history-mobile" class="active">
+        <i class="fas fa-history nav-icon"></i>
+        <span>Riwayat</span>
+      </a>
+      <a href="#" data-page="profile" id="nav-profile-mobile">
+        <i class="fas fa-user nav-icon"></i>
+        <span>Profil</span>
+      </a>
+    </nav>
+    
+    <!-- Modal Detail Absensi -->
+    <div id="detailModal" class="modal-overlay" style="display:none">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h3>Detail Absensi</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="detail-container">
+            <div class="detail-date" id="detailDate">Rabu, 1 Mei 2025</div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-3">
+              <div class="detail-col">
+                <h4>Absen Masuk</h4>
+                <div class="detail-time" id="detailCheckIn">08:00:00</div>
+                <div class="detail-photo" id="detailPhotoIn">
+                  <img src="https://via.placeholder.com/300x400" alt="Foto Masuk">
+                </div>
+                <div class="detail-location" id="detailLocationIn">
+                  <div class="location-label">Lokasi Masuk:</div>
+                  <div class="location-value">Makassar, South Sulawesi</div>
+                </div>
+              </div>
+              
+              <div class="detail-col">
+                <h4>Absen Pulang</h4>
+                <div class="detail-time" id="detailCheckOut">17:00:00</div>
+                <div class="detail-photo" id="detailPhotoOut">
+                  <img src="https://via.placeholder.com/300x400" alt="Foto Pulang">
+                </div>
+                <div class="detail-location" id="detailLocationOut">
+                  <div class="location-label">Lokasi Pulang:</div>
+                  <div class="location-value">Makassar, South Sulawesi</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="detail-info mt-4">
+              <div class="detail-status" id="detailStatus">Status: <span class="badge success">Hadir</span></div>
+              <div class="detail-hours" id="detailHours">Total Jam Kerja: <span>9:00</span></div>
+              <div class="detail-notes" id="detailNotes">Keterangan: -</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary modal-close-btn">Tutup</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" style="display: none;">
+      <div class="loading-spinner"></div>
+      <div class="loading-message">Memuat...</div>
+    </div>
+    
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+    
+    <!-- JavaScript untuk halaman History -->
+    <script>
+      // Data riwayat absensi untuk ditampilkan
+      let historyData = [];
+      
+      /**
+       * Format tanggal dalam format Indonesia
+       * @param {string} dateString - String tanggal
+       * @return {string} - Tanggal yang diformat
+       */
+      function formatDateID(dateString) {
+        const date = new Date(dateString);
+        const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        
+        return `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+      }
+      
+      /**
+       * Load data riwayat absensi
+       */
+      function loadHistoryData() {
+        // Ambil nilai filter
+        const month = document.getElementById('month').value;
+        const year = document.getElementById('year').value;
+        const status = document.getElementById('status').value;
+        
+        // Tampilkan loading
+        showLoading("Memuat data riwayat...");
+        
+        // Panggil fungsi server untuk mendapatkan data
+        google.script.run
+          .withSuccessHandler(function(result) {
+            hideLoading();
+            
+            if (!result.success) {
+              showNotification(result.message || "Gagal memuat data riwayat", "error");
+              return;
+            }
+            
+            // Simpan data riwayat
+            historyData = result.history;
+            
+            // Filter berdasarkan status jika dipilih
+            if (status !== 'all') {
+              historyData = historyData.filter(item => {
+                return item.status.toLowerCase() === status.toLowerCase();
+              });
+            }
+            
+            // Update tabel riwayat
+            updateHistoryTable(historyData);
+            
+            // Update ringkasan
+            updateSummary(result.summary);
+            
+            // Update grafik jam kerja
+            updateWorkHoursChart(result.workHoursData);
+          })
+          .withFailureHandler(function(error) {
+            hideLoading();
+            showNotification("Error: " + error, "error");
+          })
+          .getExtendedHistoryData(month, year);
+      }
+      
+      /**
+       * Update tabel riwayat
+       * @param {Array} history - Array data riwayat
+       */
+      function updateHistoryTable(history) {
+        const tableBody = document.getElementById('historyTableBody');
+        
+        // Kosongkan tabel
+        tableBody.innerHTML = '';
+        
+        if (!history || history.length === 0) {
+          tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Tidak ada data untuk periode yang dipilih</td></tr>';
+          return;
+        }
+        
+        // Tambahkan data ke tabel
+        history.forEach(function(item) {
+          const row = document.createElement('tr');
+          row.dataset.id = item.id;  // Tambahkan id sebagai atribut data untuk detail
+          
+          // Tentukan class untuk status
+          let statusClass = '';
+          if (item.status === 'Hadir') statusClass = 'hadir';
+          else if (item.status === 'Terlambat') statusClass = 'terlambat';
+          else if (item.status === 'Izin' || item.status === 'Sakit' || item.status === 'Cuti') statusClass = 'izin';
+          
+          // Format tanggal dengan nama hari
+          const formattedDate = item.dayName ? 
+                                `${item.dayName}, ${item.date.split('-').reverse().join('/')}` : 
+                                formatDateID(item.date);
+          
+          row.innerHTML = `
+            <td>${formattedDate}</td>
+            <td>${item.checkIn || '-'}</td>
+            <td>${item.checkOut || '-'}</td>
+            <td class="status-cell ${statusClass}">${item.status}</td>
+            <td>${item.location ? item.location.split(',')[0] : '-'}</td>
+            <td class="hours-cell">${item.totalHours || '-'}</td>
+            <td>${item.notes || '-'}</td>
+          `;
+          
+          // Tambahkan event click untuk detail
+          row.addEventListener('click', function() {
+            showDetailModal(item);
+          });
+          
+          tableBody.appendChild(row);
+        });
+      }
+      
+      /**
+       * Update ringkasan
+       * @param {Object} summary - Data ringkasan
+       */
+      function updateSummary(summary) {
+        if (!summary) return;
+        
+        document.getElementById('totalWorkDays').textContent = summary.totalDays || 0;
+        document.getElementById('totalPresent').textContent = summary.presentDays || 0;
+        document.getElementById('totalLate').textContent = summary.lateDays || 0;
+        document.getElementById('totalLeave').textContent = summary.leaveDays || 0;
+        document.getElementById('totalWorkHours').textContent = summary.totalWorkHours || '0:00';
+      }
+      
+      /**
+       * Update grafik jam kerja
+       * @param {Object} workHoursData - Data jam kerja
+       */
+      function updateWorkHoursChart(workHoursData) {
+        if (!workHoursData || !workHoursData.dailyHours) return;
+        
+        const chartContainer = document.querySelector('.work-hours-chart');
+        if (!chartContainer) return;
+        
+        // Kosongkan chart container
+        chartContainer.innerHTML = '';
+        
+        // Dapatkan nilai maksimum untuk scaling
+        const dailyData = workHoursData.dailyHours;
+        const values = Object.values(dailyData).map(val => {
+          const [hours, minutes] = val.split(':').map(Number);
+          return hours + (minutes / 60);
+        });
+        const maxHours = Math.max(...values, 1); // Minimal 1 jam untuk skala
+        
+        // Label hari
+        const dayLabels = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+        
+        // Buat bar untuk setiap hari dalam seminggu
+        const chartPlaceholder = document.createElement('div');
+        chartPlaceholder.className = 'chart-placeholder';
+        
+        for (let i = 0; i < 7; i++) {
+          const timeStr = dailyData[i] || '0:00';
+          const [hours, minutes] = timeStr.split(':').map(Number);
+          const hoursValue = hours + (minutes / 60);
+          const percentage = (hoursValue / maxHours) * 100;
+          
+          const barElement = document.createElement('div');
+          barElement.className = 'chart-bar';
+          barElement.style.height = percentage + '%';
+          
+          const labelElement = document.createElement('div');
+          labelElement.className = 'chart-label';
+          labelElement.textContent = dayLabels[i];
+          
+          const valueElement = document.createElement('div');
+          valueElement.className = 'chart-value';
+          valueElement.textContent = timeStr;
+          
+          barElement.appendChild(valueElement);
+          barElement.appendChild(labelElement);
+          chartPlaceholder.appendChild(barElement);
+        }
+        
+        chartContainer.appendChild(chartPlaceholder);
+      }
+      
+      /**
+       * Tampilkan modal detail absensi
+       * @param {Object} item - Data item absensi
+       */
+      function showDetailModal(item) {
+        // Set data detail
+        document.getElementById('detailDate').textContent = formatDateID(item.date);
+        document.getElementById('detailCheckIn').textContent = item.checkIn || '-';
+        document.getElementById('detailCheckOut').textContent = item.checkOut || '-';
+        
+        // Status dengan class yang sesuai
+        const statusElement = document.getElementById('detailStatus');
+        let statusClass = '';
+        if (item.status === 'Hadir') statusClass = 'success';
+        else if (item.status === 'Terlambat') statusClass = 'warning';
+        else statusClass = 'info';
+        
+        statusElement.innerHTML = `Status: <span class="badge ${statusClass}">${item.status}</span>`;
+        
+        // Total jam kerja
+        document.getElementById('detailHours').innerHTML = `Total Jam Kerja: <span>${item.totalHours || '-'}</span>`;
+        
+        // Keterangan
+        document.getElementById('detailNotes').textContent = `Keterangan: ${item.notes || '-'}`;
+        
+        // Lokasi
+        const locationInElement = document.querySelector('#detailLocationIn .location-value');
+        if (locationInElement) locationInElement.textContent = item.location || '-';
+        
+        const locationOutElement = document.querySelector('#detailLocationOut .location-value');
+        if (locationOutElement) locationOutElement.textContent = item.location || '-';
+        
+        // Foto (placeholder untuk saat ini)
+        // Dalam implementasi sebenarnya, Anda perlu menggunakan data foto yang sebenarnya
+        const photoInElement = document.getElementById('detailPhotoIn');
+        const photoOutElement = document.getElementById('detailPhotoOut');
+        
+        // Tampilkan modal
+        document.getElementById('detailModal').style.display = 'block';
+      }
+      
+      /**
+       * Sembunyikan modal detail
+       */
+      function hideDetailModal() {
+        document.getElementById('detailModal').style.display = 'none';
+      }
+      
+      /**
+       * Ekspor ke PDF
+       */
+      function exportToPdf() {
+        showLoading("Menyiapkan ekspor PDF...");
+        
+        const month = document.getElementById('month').value;
+        const year = document.getElementById('year').value;
+        
+        google.script.run
+          .withSuccessHandler(function(result) {
+            hideLoading();
+            
+            if (result.success) {
+              showNotification("PDF berhasil dibuat dan tersedia di Google Drive Anda", "success");
+            } else {
+              showNotification(result.message || "Gagal membuat PDF", "error");
+            }
+          })
+          .withFailureHandler(function(error) {
+            hideLoading();
+            showNotification("Error: " + error, "error");
+          })
+          .exportAttendanceToPdf(month, year);
+      }
+      
+      /**
+       * Ekspor ke Excel
+       */
+      function exportToExcel() {
+        showLoading("Menyiapkan ekspor Excel...");
+        
+        const month = document.getElementById('month').value;
+        const year = document.getElementById('year').value;
+        
+        google.script.run
+          .withSuccessHandler(function(result) {
+            hideLoading();
+            
+            if (result.success) {
+              showNotification("File Excel berhasil dibuat dan tersedia di Google Drive Anda", "success");
+            } else {
+              showNotification(result.message || "Gagal membuat file Excel", "error");
+            }
+          })
+          .withFailureHandler(function(error) {
+            hideLoading();
+            showNotification("Error: " + error, "error");
+          })
+          .exportAttendanceToExcel(month, year);
+      }
+      
+      /**
+       * Kirim laporan via email
+       */
+      function sendReportEmail() {
+        showLoading("Mengirim laporan ke email...");
+        
+        const month = document.getElementById('month').value;
+        const year = document.getElementById('year').value;
+        
+        google.script.run
+          .withSuccessHandler(function(result) {
+            hideLoading();
+            
+            if (result.success) {
+              showNotification(result.message || "Laporan berhasil dikirim ke email Anda", "success");
+            } else {
+              showNotification(result.message || "Gagal mengirim laporan", "error");
+            }
+          })
+          .withFailureHandler(function(error) {
+            hideLoading();
+            showNotification("Error: " + error, "error");
+          })
+          .sendReport(month, year);
+      }
+      
+      /**
+       * Set default filter (bulan dan tahun saat ini)
+       */
+      function setDefaultFilters() {
+        const currentDate = new Date();
+        
+        // Set bulan saat ini
+        const monthSelect = document.getElementById('month');
+        if (monthSelect) {
+          monthSelect.value = (currentDate.getMonth() + 1).toString();
+        }
+        
+        // Set tahun saat ini
+        const yearSelect = document.getElementById('year');
+        if (yearSelect) {
+          const currentYear = currentDate.getFullYear();
+          
+          // Cek apakah opsi tahun sudah ada
+          let yearExists = false;
+          for (let i = 0; i < yearSelect.options.length; i++) {
+            if (yearSelect.options[i].value == currentYear) {
+              yearExists = true;
+              break;
+            }
+          }
+          
+          // Jika belum ada, tambahkan
+          if (!yearExists) {
+            const option = document.createElement('option');
+            option.value = currentYear;
+            option.textContent = currentYear;
+            yearSelect.insertBefore(option, yearSelect.firstChild);
+          }
+          
+          // Set nilai ke tahun saat ini
+          yearSelect.value = currentYear.toString();
+        }
+      }
+      
+      /**
+       * Logout pengguna
+       */
+      function logout() {
+        showLoading("Memproses logout...");
+        
+        google.script.run
+          .withSuccessHandler(function(result) {
+            hideLoading();
+            
+            if (result.success) {
+              navigateTo('login');
+            } else {
+              showNotification(result.message || "Gagal logout", "error");
+            }
+          })
+          .withFailureHandler(function(error) {
+            hideLoading();
+            showNotification("Error: " + error, "error");
+          })
+          .logout();
+      }
+      
+      /**
+       * Tampilkan loading overlay
+       * @param {string} message - Pesan loading
+       */
+      function showLoading(message) {
+        const overlay = document.getElementById('loading-overlay');
+        const messageElement = overlay.querySelector('.loading-message');
+        
+        messageElement.textContent = message || 'Memuat...';
+        overlay.style.display = 'flex';
+      }
+      
+      /**
+       * Sembunyikan loading overlay
+       */
+      function hideLoading() {
+        document.getElementById('loading-overlay').style.display = 'none';
+      }
+      
+      /**
+       * Tampilkan notifikasi
+       * @param {string} message - Pesan notifikasi
+       * @param {string} type - Tipe notifikasi (success/error/warning/info)
+       */
+      function showNotification(message, type) {
+        const container = document.getElementById('notification-container');
+        
+        // Buat elemen notifikasi
+        const notification = document.createElement('div');
+        notification.className = 'notification ' + (type || 'info');
+        notification.textContent = message;
+        
+        // Tambahkan ke container
+        container.appendChild(notification);
+        
+        // Hilangkan setelah beberapa detik
+        setTimeout(() => {
+          notification.classList.add('fade-out');
+          setTimeout(() => {
+            notification.remove();
+          }, 500);
+        }, 5000);
+      }
+      
+      /**
+       * Inisialisasi halaman
+       */
+      function initializePage() {
+        // Set filter default
+        setDefaultFilters();
+        
+        // Load data awal
+        loadHistoryData();
+        
+        // Event listener untuk tombol filter
+        const filterButton = document.getElementById('filterButton');
+        if (filterButton) {
+          filterButton.addEventListener('click', loadHistoryData);
+        }
+        
+        // Event listener untuk tombol ekspor
+        const exportPdfButton = document.getElementById('exportPdfButton');
+        if (exportPdfButton) {
+          exportPdfButton.addEventListener('click', exportToPdf);
+        }
+        
+        const exportExcelButton = document.getElementById('exportExcelButton');
+        if (exportExcelButton) {
+          exportExcelButton.addEventListener('click', exportToExcel);
+        }
+        
+        // Event listener untuk tombol kirim email
+        const sendEmailButton = document.getElementById('sendEmailButton');
+        if (sendEmailButton) {
+          sendEmailButton.addEventListener('click', sendReportEmail);
+        }
+        
+        // Event listener untuk modal
+        const closeBtn = document.querySelector('.modal-close');
+        const closeModalBtn = document.querySelector('.modal-close-btn');
+        
+        if (closeBtn) {
+          closeBtn.addEventListener('click', hideDetailModal);
+        }
+        
+        if (closeModalBtn) {
+          closeModalBtn.addEventListener('click', hideDetailModal);
+        }
+        
+        // Tutup modal jika klik di luar modal
+        window.addEventListener('click', function(event) {
+          const modal = document.getElementById('detailModal');
+          if (event.target == modal) {
+            hideDetailModal();
+          }
+        });
+      }
+      
+      // Jalankan inisialisasi saat DOM selesai dimuat
+      document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+    
+    <?!= include('JavaScript'); ?>
+  </body>
+</html>

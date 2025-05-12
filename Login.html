@@ -1,0 +1,263 @@
+<!-- File: Login.html -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GASPUL Hadir - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <?!= include('CSS'); ?>
+  </head>
+  <body>
+    <div class="container">
+      <div class="login-container">
+        <!-- Login Header -->
+        <div class="login-header">
+          <div class="logo">
+            <span class="check-icon">✓</span> GASPUL Hadir
+          </div>
+        </div>
+        
+        <!-- Login Body -->
+        <div class="login-body">
+          <!-- Login Options -->
+          <div class="login-options">
+            <div class="login-option active" id="nipOption">Login dengan NIP</div>
+            <div class="login-option" id="qrOption">Login dengan QR</div>
+          </div>
+          
+          <!-- NIP Login Form -->
+          <div id="nipLogin">
+            <form id="loginForm">
+              <div class="form-group">
+                <label for="nip">NIP</label>
+                <input type="text" id="nip" placeholder="Masukkan NIP Anda" autocomplete="off">
+                <div id="nip-error" class="error-message"></div>
+              </div>
+              
+              <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Masukkan password Anda">
+                <div id="password-error" class="error-message"></div>
+              </div>
+              
+              <button id="loginButton" type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+            </form>
+          </div>
+          
+          <!-- QR Login Section -->
+          <div id="qrLogin" class="qr-scanner" style="display: none;">
+            <div class="qr-box">
+              <p>Scanner QR Code</p>
+            </div>
+            <p>Arahkan QR Code Anda ke kamera</p>
+            <button id="startScan" class="btn btn-success">Mulai Scan</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Version Info -->
+      <div style="text-align: center; margin-top: 20px; color: #666; font-size: 0.9rem;">
+        GASPUL Hadir v1.0.0 | Sistem Absensi Berbasis Google Spreadsheet
+      </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" style="display: none;">
+      <div class="loading-spinner"></div>
+      <div class="loading-message">Memuat...</div>
+    </div>
+    
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+    
+    <!-- Login Script -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Setup tab login
+        const nipOption = document.getElementById('nipOption');
+        const qrOption = document.getElementById('qrOption');
+        const nipLogin = document.getElementById('nipLogin');
+        const qrLogin = document.getElementById('qrLogin');
+        
+        if (nipOption && qrOption) {
+          nipOption.addEventListener('click', function() {
+            nipOption.classList.add('active');
+            qrOption.classList.remove('active');
+            if (nipLogin) nipLogin.style.display = 'block';
+            if (qrLogin) qrLogin.style.display = 'none';
+          });
+          
+          qrOption.addEventListener('click', function() {
+            qrOption.classList.add('active');
+            nipOption.classList.remove('active');
+            if (nipLogin) nipLogin.style.display = 'none';
+            if (qrLogin) qrLogin.style.display = 'block';
+          });
+        }
+        
+        // Setup login form
+        const loginForm = document.getElementById('loginForm');
+        const loginButton = document.getElementById('loginButton');
+        
+        function processLogin(e) {
+          if (e) e.preventDefault();
+          
+          const nipInput = document.getElementById('nip');
+          const passwordInput = document.getElementById('password');
+          
+          // Reset error messages
+          clearErrors();
+          
+          // Validasi basic
+          let isValid = true;
+          
+          if (!nipInput || !nipInput.value.trim()) {
+            showInputError(nipInput, 'NIP tidak boleh kosong');
+            isValid = false;
+          }
+          
+          if (!passwordInput || !passwordInput.value) {
+            showInputError(passwordInput, 'Password tidak boleh kosong');
+            isValid = false;
+          }
+          
+          if (!isValid) return;
+          
+          // Tampilkan loading
+          showLoading("Memverifikasi login...");
+          
+          // Panggil fungsi login server
+          google.script.run
+            .withSuccessHandler(function(result) {
+              hideLoading();
+              
+              if (result.success) {
+                // Redirect ke beranda
+                navigateTo('home');
+              } else {
+                // Tampilkan error
+                showNotification(result.message || 'Login gagal', 'error');
+              }
+            })
+            .withFailureHandler(function(error) {
+              hideLoading();
+              showNotification('Error: ' + error, 'error');
+            })
+            .login(nipInput.value.trim(), passwordInput.value);
+        }
+        
+        if (loginForm) {
+          loginForm.addEventListener('submit', processLogin);
+        }
+        
+        if (loginButton) {
+          loginButton.addEventListener('click', processLogin);
+        }
+        
+        // QR scan button
+        const startScanButton = document.getElementById('startScan');
+        if (startScanButton) {
+          startScanButton.addEventListener('click', function() {
+            showNotification('Fitur QR Code Scan akan segera tersedia.', 'info');
+          });
+        }
+      });
+      
+      // Function untuk menampilkan error pada input
+      function showInputError(inputElement, message) {
+        if (!inputElement) return;
+        
+        inputElement.classList.add('error');
+        
+        const errorId = inputElement.id + '-error';
+        let errorEl = document.getElementById(errorId);
+        
+        if (!errorEl) {
+          errorEl = document.createElement('div');
+          errorEl.id = errorId;
+          errorEl.className = 'error-message';
+          inputElement.parentNode.appendChild(errorEl);
+        }
+        
+        errorEl.textContent = message;
+        
+        // Reset error on input
+        inputElement.addEventListener('input', function() {
+          this.classList.remove('error');
+          if (errorEl) errorEl.textContent = '';
+        }, { once: true });
+      }
+      
+      // Function untuk menghapus semua error messages
+      function clearErrors() {
+        const errorMessages = document.querySelectorAll('.error-message');
+        const errorInputs = document.querySelectorAll('input.error');
+        
+        errorMessages.forEach(el => el.textContent = '');
+        errorInputs.forEach(el => el.classList.remove('error'));
+      }
+      
+      // Function untuk menampilkan loading overlay
+      function showLoading(message) {
+        const overlay = document.getElementById('loading-overlay');
+        if (!overlay) return;
+        
+        const messageEl = overlay.querySelector('.loading-message');
+        if (messageEl) messageEl.textContent = message || 'Memuat...';
+        
+        overlay.style.display = 'flex';
+      }
+      
+      // Function untuk menyembunyikan loading overlay
+      function hideLoading() {
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) overlay.style.display = 'none';
+      }
+      
+      // Function untuk menampilkan notifikasi
+      function showNotification(message, type) {
+        let container = document.getElementById('notification-container');
+        if (!container) {
+          container = document.createElement('div');
+          container.id = 'notification-container';
+          document.body.appendChild(container);
+        }
+        
+        // Hapus notifikasi yang ada
+        container.innerHTML = '';
+        
+        // Buat notifikasi baru
+        const notification = document.createElement('div');
+        notification.className = 'notification ' + (type || 'info');
+        notification.textContent = message;
+        
+        container.appendChild(notification);
+        
+        // Hilangkan setelah beberapa detik
+        setTimeout(function() {
+          notification.classList.add('fade-out');
+          setTimeout(function() {
+            notification.remove();
+          }, 500);
+        }, 5000);
+      }
+      
+      // Function untuk navigasi ke halaman lain
+      function navigateTo(page) {
+        showLoading("Menuju halaman " + page + "...");
+        
+        google.script.run
+          .withSuccessHandler(function(url) {
+            window.top.location.href = url + '?page=' + page;
+          })
+          .withFailureHandler(function(error) {
+            hideLoading();
+            showNotification("Error navigasi: " + error, "error");
+          })
+          .getScriptURL();
+      }
+    </script>
+  </body>
+</html>

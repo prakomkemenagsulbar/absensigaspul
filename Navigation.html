@@ -1,0 +1,177 @@
+<!-- File: Navigation.html -->
+<script>
+/**
+ * Navigation.html
+ * Menangani navigasi antar halaman di GASPUL Hadir
+ */
+
+/**
+ * Navigasi ke halaman lain
+ * @param {string} page - Nama halaman tujuan
+ */
+function navigateTo(page) {
+  console.log("Navigating to:", page);
+  showLoading("Menuju halaman " + page + "...");
+  
+  try {
+    // Simpan state di sessionStorage jika tersedia
+    if (window.sessionStorage) {
+      sessionStorage.setItem('lastPage', page);
+    }
+    
+    google.script.run
+      .withSuccessHandler(function(url) {
+        try {
+          const fullUrl = url + '?page=' + page;
+          console.log("Navigation URL:", fullUrl);
+          
+          // Navigasi ke URL
+          window.top.location.href = fullUrl;
+        } catch (error) {
+          hideLoading();
+          console.error("Navigation error:", error);
+          showNotification("Error navigasi: " + error.message, "error");
+        }
+      })
+      .withFailureHandler(function(error) {
+        hideLoading();
+        console.error("getScriptURL error:", error);
+        showNotification("Error navigasi: " + error, "error");
+      })
+      .getScriptURL();
+  } catch (error) {
+    hideLoading();
+    showNotification("Error navigasi: " + error, "error");
+  }
+}
+
+// Inisialisasi navigasi saat dokumen dimuat
+document.addEventListener('DOMContentLoaded', function() {
+  console.log("Initializing navigation...");
+  
+  // Tambahkan event listeners ke semua link navigasi
+  document.querySelectorAll('.top-nav a, .bottom-nav a').forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      const page = this.getAttribute('data-page') || this.id.replace('nav-', '');
+      navigateTo(page);
+    });
+  });
+  
+  // Set class active pada link yang sesuai dengan halaman saat ini
+  const currentPage = getCurrentPage();
+  if (currentPage) {
+    setActiveNavLink(currentPage);
+  }
+});
+
+/**
+ * Mendapatkan halaman saat ini dari URL
+ * @return {string} Nama halaman saat ini
+ */
+function getCurrentPage() {
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('page') || 'home';
+  } catch (error) {
+    console.error("Error getting current page:", error);
+    return 'home';
+  }
+}
+
+/**
+ * Set class active pada link navigasi yang sesuai
+ * @param {string} page - Nama halaman yang aktif
+ */
+function setActiveNavLink(page) {
+  // Reset semua link
+  document.querySelectorAll('.top-nav a, .bottom-nav a').forEach(function(link) {
+    link.classList.remove('active');
+  });
+  
+  // Set active class pada link yang sesuai
+  document.querySelectorAll(`.top-nav a[data-page="${page}"], .bottom-nav a[data-page="${page}"]`).forEach(function(link) {
+    link.classList.add('active');
+  });
+  
+  // Alternatif berdasarkan ID
+  document.querySelectorAll(`#nav-${page}, #nav-${page}-mobile`).forEach(function(link) {
+    link.classList.add('active');
+  });
+}
+
+/**
+ * Tampilkan loading overlay jika tidak ada di halaman
+ * @param {string} message - Pesan loading
+ */
+function showLoading(message) {
+  let overlay = document.getElementById('loading-overlay');
+  
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'loading-overlay';
+    
+    const spinner = document.createElement('div');
+    spinner.className = 'loading-spinner';
+    
+    const messageEl = document.createElement('div');
+    messageEl.className = 'loading-message';
+    
+    overlay.appendChild(spinner);
+    overlay.appendChild(messageEl);
+    document.body.appendChild(overlay);
+  }
+  
+  const messageEl = overlay.querySelector('.loading-message');
+  if (messageEl) messageEl.textContent = message || 'Memuat...';
+  
+  overlay.style.display = 'flex';
+}
+
+/**
+ * Sembunyikan loading overlay
+ */
+function hideLoading() {
+  const overlay = document.getElementById('loading-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+/**
+ * Tampilkan notifikasi jika fungsi belum tersedia
+ * @param {string} message - Pesan notifikasi
+ * @param {string} type - Tipe notifikasi (success/error/warning/info)
+ */
+function showNotification(message, type) {
+  if (typeof window.showNotification === 'function') {
+    // Gunakan fungsi dari JavaScript.html jika tersedia
+    window.showNotification(message, type);
+    return;
+  }
+  
+  // Implementasi fallback jika tidak ada fungsi global
+  let container = document.getElementById('notification-container');
+  
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'notification-container';
+    container.style.position = 'fixed';
+    container.style.top = '20px';
+    container.style.right = '20px';
+    container.style.zIndex = '1000';
+    document.body.appendChild(container);
+  }
+  
+  const notification = document.createElement('div');
+  notification.className = 'notification ' + (type || 'info');
+  notification.textContent = message;
+  
+  container.appendChild(notification);
+  
+  setTimeout(function() {
+    notification.classList.add('fade-out');
+    setTimeout(function() {
+      notification.remove();
+    }, 500);
+  }, 5000);
+}
+</script>

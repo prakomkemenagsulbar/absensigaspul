@@ -1,0 +1,1326 @@
+<!-- File: Home.html -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GASPUL Hadir - Beranda</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <?!= include('CSS'); ?>
+    <?!= include('Navigation'); ?>
+    <!-- Font Awesome untuk ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+      /* Tambahan gaya khusus untuk Home.html */
+      .header-user-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .pulse-indicator {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #4CAF50;
+        margin-right: 5px;
+        animation: pulse 1.5s infinite;
+      }
+      
+      @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.3; }
+        100% { opacity: 1; }
+      }
+      
+      .current-time-display {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 10px 0;
+        color: #3b82f6;
+        text-align: center;
+      }
+      
+      .camera-container {
+        position: relative;
+        width: 100%;
+        height: 300px;
+        border-radius: 8px;
+        overflow: hidden;
+        background-color: #000;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      }
+      
+      .camera-container::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 8px;
+        border: 2px solid rgba(255,255,255,0.1);
+        pointer-events: none;
+        z-index: 2;
+      }
+      
+      .photo-preview-container {
+        position: relative;
+        width: 100%;
+        height: 300px;
+        border-radius: 8px;
+        overflow: hidden;
+        background-color: #000;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      }
+      
+      .photo-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+        justify-content: center;
+      }
+      
+      .attendance-status {
+        display: flex;
+        gap: 15px;
+        margin: 15px 0;
+      }
+      
+      .status-indicator {
+        flex: 1;
+        padding: 12px;
+        border-radius: 8px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+      }
+      
+      .status-indicator i {
+        font-size: 1.5rem;
+        margin-bottom: 5px;
+      }
+      
+      .status-indicator.active {
+        transform: scale(1.05);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      }
+      
+      .status-masuk {
+        background-color: #e0f2fe;
+        color: #0369a1;
+      }
+      
+      .status-masuk.active {
+        background-color: #0369a1;
+        color: white;
+      }
+      
+      .status-pulang {
+        background-color: #f0fdf4;
+        color: #16a34a;
+      }
+      
+      .status-pulang.active {
+        background-color: #16a34a;
+        color: white;
+      }
+      
+      .location-info {
+        background-color: #f9fafb;
+        padding: 12px;
+        border-radius: 8px;
+        margin-top: 10px;
+      }
+      
+      .location-info p {
+        margin: 8px 0;
+        display: flex;
+        align-items: center;
+      }
+      
+      .location-info i {
+        width: 20px;
+        margin-right: 8px;
+        color: #3b82f6;
+      }
+      
+      .map-placeholder {
+        width: 100%;
+        height: 250px;
+        border-radius: 8px;
+        background-color: #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .map-placeholder img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      
+      .map-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+      }
+      
+      .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin: 20px 0;
+      }
+      
+      @media (min-width: 640px) {
+        .action-buttons {
+          flex-direction: row;
+        }
+      }
+      
+      .btn-attendance {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 14px;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        font-size: 1rem;
+      }
+      
+      .btn-attendance:hover:not(:disabled) {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+      }
+      
+      .btn-attendance:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      
+      .btn-checkin {
+        background-color: #10b981;
+        color: white;
+      }
+      
+      .btn-checkout {
+        background-color: #3b82f6;
+        color: white;
+      }
+      
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+      }
+      
+      .stat-card {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px 15px;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+      }
+      
+      .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+      }
+      
+      .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #3b82f6;
+        margin-bottom: 5px;
+      }
+      
+      .stat-label {
+        color: #64748b;
+        font-size: 0.9rem;
+      }
+      
+      .logout-btn {
+        display: flex;
+        align-items: center;
+        padding: 8px 15px;
+        border-radius: 6px;
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      
+      .logout-btn:hover {
+        background-color: rgba(239, 68, 68, 0.2);
+      }
+      
+      .logout-btn i {
+        margin-right: 6px;
+      }
+      
+      .today-work-info {
+        background-color: #f0f9ff;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 20px;
+      }
+      
+      .today-work-info h3 {
+        margin-top: 0;
+        color: #0369a1;
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+      }
+      
+      .today-work-info h3 i {
+        margin-right: 8px;
+      }
+      
+      .work-time-display {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+        font-size: 0.95rem;
+      }
+      
+      .work-time-label {
+        color: #64748b;
+      }
+      
+      .work-time-value {
+        font-weight: 500;
+        color: #0c4a6e;
+      }
+      
+      /* Gaya modal */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0,0,0,0.7);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .modal-container {
+        width: 90%;
+        max-width: 500px;
+        background-color: white;
+        border-radius: 10px;
+        overflow: hidden;
+        animation: modal-slide-up 0.3s ease-out;
+      }
+      
+      @keyframes modal-slide-up {
+        from { transform: translateY(50px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      
+      .modal-header {
+        padding: 15px 20px;
+        background-color: #3b82f6;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      
+      .modal-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+      }
+      
+      .modal-close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+      }
+      
+      .modal-body {
+        padding: 20px;
+      }
+      
+      .modal-footer {
+        padding: 15px 20px;
+        background-color: #f9fafb;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header>
+        <div class="logo">
+          <span class="check-icon">✓</span> Gaspul Hadir
+        </div>
+        <nav class="top-nav">
+          <a href="#" data-page="home" id="nav-home" class="active">Beranda</a>
+          <a href="#" data-page="history" id="nav-history">Riwayat</a>
+          <a href="#" data-page="profile" id="nav-profile">Profil</a>
+        </nav>
+        <div class="header-user-info">
+          <div class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </div>
+          <div class="user">
+            <div class="user-avatar" id="userAvatar">A</div>
+            <span id="userName">Aditya</span>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Main Content -->
+      <main>
+        <!-- Date and Time Section -->
+        <div class="card">
+          <div class="flex flex-col items-center">
+            <h2 id="currentDate" class="text-xl font-bold mb-2">Sabtu, 10 Mei 2025</h2>
+            <div class="current-time-display">
+              <span class="pulse-indicator"></span>
+              <span id="currentTime">10:10:14</span>
+            </div>
+          </div>
+
+          <!-- Status Absensi -->
+          <div class="attendance-status">
+            <div id="checkInStatusContainer" class="status-indicator status-masuk">
+              <i class="fas fa-sign-in-alt"></i>
+              <div>Absen Masuk</div>
+              <div id="checkInTime" class="font-semibold mt-1">--:--</div>
+            </div>
+            <div id="checkOutStatusContainer" class="status-indicator status-pulang">
+              <i class="fas fa-sign-out-alt"></i>
+              <div>Absen Pulang</div>
+              <div id="checkOutTime" class="font-semibold mt-1">--:--</div>
+            </div>
+          </div>
+
+          <!-- Info Jadwal Kerja Hari Ini -->
+          <div class="today-work-info">
+            <h3><i class="fas fa-calendar-day"></i> Jadwal Kerja Hari Ini</h3>
+            <div id="workScheduleInfo">Memuat jadwal...</div>
+            <div class="work-time-display">
+              <div>
+                <span class="work-time-label">Jam Kerja:</span>
+                <span id="workHoursToday" class="work-time-value">08:00 - 17:00</span>
+              </div>
+              <div>
+                <span class="work-time-label">Durasi:</span>
+                <span id="workDurationToday" class="work-time-value">-</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Camera & Map Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          <div class="card">
+            <h3 class="text-lg font-semibold mb-3 flex items-center">
+              <i class="fas fa-camera text-blue-500 mr-2"></i>
+              Kamera
+            </h3>
+            <div id="cameraSection">
+              <div class="camera-container">
+                <video id="cameraPreview" autoplay playsinline style="width:100%; height:100%; object-fit:cover;"></video>
+                <canvas id="cameraCanvas" style="display:none;"></canvas>
+                <div id="cameraPlaceholder" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:#333; color:white; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                  <i class="fas fa-camera fa-3x mb-2"></i>
+                  <p>Kamera tidak tersedia</p>
+                </div>
+                <div class="camera-controls" style="position:absolute; bottom:10px; right:10px; z-index:10;">
+                  <button id="switchCameraBtn" class="btn btn-sm btn-light">
+                    <i class="fas fa-sync-alt"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div id="photoPreviewSection" style="display:none;">
+              <div class="photo-preview-container">
+                <img id="photoPreview" style="width:100%; height:100%; object-fit:cover;" src="" alt="Foto absensi">
+              </div>
+              <div class="photo-actions">
+                <button id="retakePhotoBtn" class="btn btn-warning flex-1">
+                  <i class="fas fa-redo mr-1"></i> Ambil Ulang
+                </button>
+                <button id="confirmPhotoBtn" class="btn btn-success flex-1">
+                  <i class="fas fa-check mr-1"></i> Konfirmasi
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card">
+            <h3 class="text-lg font-semibold mb-3 flex items-center">
+              <i class="fas fa-map-marker-alt text-blue-500 mr-2"></i>
+              Lokasi Anda
+            </h3>
+            <div id="mapContainer" class="map-placeholder">
+              <div class="map-overlay">
+                <span>Memuat peta...</span>
+              </div>
+            </div>
+            <div class="location-info">
+              <p><i class="fas fa-crosshairs"></i> <span id="coordinates">Mengambil lokasi...</span></p>
+              <p><i class="fas fa-map-pin"></i> <span id="address">Mengambil alamat...</span></p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <button id="checkInButton" class="btn-attendance btn-checkin">
+            <i class="fas fa-sign-in-alt"></i> Absen Masuk
+          </button>
+          <button id="checkOutButton" class="btn-attendance btn-checkout" disabled>
+            <i class="fas fa-sign-out-alt"></i> Absen Pulang
+          </button>
+        </div>
+        
+        <!-- Statistics Section -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="presentDays">0</div>
+            <div class="stat-label">Hari Hadir</div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-value" id="leaveDays">0</div>
+            <div class="stat-label">Izin/Sakit</div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-value" id="attendancePercentage">0%</div>
+            <div class="stat-label">Kehadiran</div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-value" id="totalWorkHours">0:00</div>
+            <div class="stat-label">Jam Kerja Bulan Ini</div>
+          </div>
+        </div>
+        
+        <!-- Report Section -->
+        <div class="card text-center mt-6 p-4">
+          <button id="sendReportButton" class="btn btn-info">
+            <i class="fas fa-envelope mr-2"></i> Kirim Laporan ke Email
+          </button>
+        </div>
+      </main>
+      
+      <!-- Footer -->
+      <footer>
+        <div class="footer-content">
+          <p>© 2025 GASPUL Hadir - Aplikasi Absensi Modern</p>
+        </div>
+      </footer>
+    </div>
+    
+    <!-- Bottom Navigation for Mobile -->
+    <nav class="bottom-nav">
+      <a href="#" data-page="home" id="nav-home-mobile" class="active">
+        <i class="fas fa-clock nav-icon"></i>
+        <span>Absensi</span>
+      </a>
+      <a href="#" data-page="history" id="nav-history-mobile">
+        <i class="fas fa-history nav-icon"></i>
+        <span>Riwayat</span>
+      </a>
+      <a href="#" data-page="profile" id="nav-profile-mobile">
+        <i class="fas fa-user nav-icon"></i>
+        <span>Profil</span>
+      </a>
+    </nav>
+    
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" style="display: none;">
+      <div class="loading-spinner"></div>
+      <div class="loading-message">Memuat...</div>
+    </div>
+    
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+    
+    <!-- JavaScript untuk fitur kamera & lokasi -->
+    <script>
+      // Variabel global
+      let stream = null;
+      let currentPosition = null;
+      let photoDataUrl = null;
+      let isFrontCamera = true;
+      let mapsLoaded = false;
+      let geocoder = null;
+      let jadwalKerjaHariIni = null;
+      
+      // Dapatkan API key dari server
+      let apiKey = null;
+      google.script.run
+        .withSuccessHandler(function(key) {
+          apiKey = key;
+          loadMapsAPI();
+        })
+        .getMapsApiKey();
+      
+      // Load Google Maps API
+      function loadMapsAPI() {
+        console.log("Loading Google Maps API...");
+        
+        // Hapus script lama jika ada
+        const existingScript = document.getElementById('google-maps-script');
+        if (existingScript) {
+          existingScript.remove();
+        }
+        
+        // Buat script baru
+        const script = document.createElement('script');
+        script.id = 'google-maps-script';
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=onMapsApiLoaded`;
+        script.async = true;
+        script.defer = true;
+        script.onerror = handleMapsError;
+        
+        console.log("Appending Maps script to head");
+        document.head.appendChild(script);
+      }
+      
+      // Callback setelah Maps API dimuat
+      function onMapsApiLoaded() {
+        console.log("Google Maps API loaded successfully");
+        mapsLoaded = true;
+        geocoder = new google.maps.Geocoder();
+        initMap();
+      }
+      
+      // Handler error saat loading Maps API
+      function handleMapsError() {
+        console.error("Failed to load Google Maps API");
+        const mapElement = document.getElementById('mapContainer');
+        if (mapElement) {
+          mapElement.innerHTML = '<div class="map-error">Gagal memuat Google Maps. Silakan refresh halaman.</div>';
+        }
+        document.getElementById('coordinates').textContent = "Maps tidak tersedia";
+        document.getElementById('address').textContent = "Alamat tidak tersedia";
+        showNotification("Google Maps tidak dapat dimuat. Beberapa fitur mungkin tidak berfungsi.", "error");
+      }
+      
+      // Inisialisasi kamera
+      async function initCamera() {
+        const videoElement = document.getElementById('cameraPreview');
+        const cameraPlaceholder = document.getElementById('cameraPlaceholder');
+        
+        try {
+          // Hentikan stream yang sedang berjalan jika ada
+          if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+          }
+          
+          // Akses kamera dengan preferensi camera depan
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: isFrontCamera ? "user" : "environment",
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            },
+            audio: false
+          });
+          
+          // Pasang stream ke elemen video
+          videoElement.srcObject = stream;
+          videoElement.style.display = 'block';
+          cameraPlaceholder.style.display = 'none';
+        } catch (error) {
+          console.error("Error accessing camera:", error);
+          videoElement.style.display = 'none';
+          cameraPlaceholder.style.display = 'flex';
+          showNotification("Gagal mengakses kamera: " + error.message, "error");
+        }
+      }
+      
+      // Switch antara kamera depan dan belakang
+      function switchCamera() {
+        isFrontCamera = !isFrontCamera;
+        initCamera();
+      }
+      
+      // Ambil foto dari kamera
+      function capturePhoto() {
+        return new Promise((resolve, reject) => {
+          const videoElement = document.getElementById('cameraPreview');
+          const canvasElement = document.getElementById('cameraCanvas');
+          
+          if (!stream) {
+            reject("Kamera tidak tersedia");
+            return;
+          }
+          
+          // Set ukuran canvas sesuai dengan video
+          canvasElement.width = videoElement.videoWidth;
+          canvasElement.height = videoElement.videoHeight;
+          
+          // Gambar frame video ke canvas
+          const context = canvasElement.getContext('2d');
+          context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+          
+          // Konversi ke data URL (format 4x6 cm pada 300 dpi)
+          try {
+            const dataUrl = canvasElement.toDataURL('image/jpeg', 0.8);
+            resolve(dataUrl);
+          } catch (error) {
+            reject("Gagal mengambil foto: " + error.message);
+          }
+        });
+      }
+      
+      // Ambil lokasi pengguna
+      function getLocation() {
+        return new Promise((resolve, reject) => {
+          if (!navigator.geolocation) {
+            reject("Geolokasi tidak didukung oleh browser ini");
+            return;
+          }
+          
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              currentPosition = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+              };
+              
+              // Update tampilan koordinat
+              document.getElementById('coordinates').textContent = 
+                currentPosition.lat.toFixed(6) + ", " + currentPosition.lng.toFixed(6);
+              
+              // Update peta jika sudah dimuat
+              if (mapsLoaded) {
+                updateMap();
+              }
+              
+              // Reverse geocoding untuk mendapatkan alamat jika Maps API tersedia
+              if (mapsLoaded && geocoder) {
+                getAddressFromCoordinates(currentPosition.lat, currentPosition.lng)
+                  .then(address => {
+                    document.getElementById('address').textContent = address;
+                  })
+                  .catch(error => {
+                    console.error("Geocoding error:", error);
+                    document.getElementById('address').textContent = "Tidak dapat mengambil alamat";
+                  });
+              } else {
+                document.getElementById('address').textContent = "Google Maps belum dimuat";
+              }
+              
+              resolve(currentPosition);
+            },
+            (error) => {
+              console.error("Geolocation error:", error);
+              let errorMsg = "Gagal mendapatkan lokasi: ";
+              
+              switch(error.code) {
+                case error.PERMISSION_DENIED:
+                  errorMsg += "Akses lokasi ditolak. Harap izinkan akses lokasi di pengaturan browser Anda.";
+                  break;
+                case error.POSITION_UNAVAILABLE:
+                  errorMsg += "Informasi lokasi tidak tersedia.";
+                  break;
+                case error.TIMEOUT:
+                  errorMsg += "Permintaan lokasi timeout.";
+                  break;
+                default:
+                  errorMsg += error.message;
+              }
+              
+              document.getElementById('coordinates').textContent = "Lokasi tidak tersedia";
+              document.getElementById('address').textContent = "Alamat tidak tersedia";
+              
+              showNotification(errorMsg, "error");
+              reject(errorMsg);
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 0
+            }
+          );
+        });
+      }
+      
+      // Inisialisasi peta
+      function initMap() {
+        console.log("Initializing map...");
+        
+        // Default koordinat (akan diganti dengan lokasi pengguna)
+        const defaultPosition = { lat: -5.1476, lng: 119.4327 }; // Makassar, South Sulawesi
+        const mapContainer = document.getElementById('mapContainer');
+        
+        try {
+          // Hapus placeholder
+          mapContainer.innerHTML = '';
+          
+          // Buat peta
+          map = new google.maps.Map(mapContainer, {
+            center: defaultPosition,
+            zoom: 15,
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+            zoomControl: true,
+            zoomControlOptions: {
+              position: google.maps.ControlPosition.RIGHT_BOTTOM
+            }
+          });
+          
+          console.log("Map initialized, getting location...");
+          
+          // Ambil lokasi pengguna
+          getLocation()
+            .then(position => {
+              console.log("Got location:", position);
+            })
+            .catch(error => {
+              console.error("Location error:", error);
+            });
+            
+        } catch (error) {
+          console.error("Error initializing map:", error);
+          mapContainer.innerHTML = '<div class="map-error">Error: Gagal menginisialisasi peta. ' + error.message + '</div>';
+        }
+      }
+      
+      // Update posisi pada peta
+      function updateMap() {
+        if (!map || !currentPosition) return;
+        
+        // Update posisi peta
+        map.setCenter(currentPosition);
+        
+        // Buat atau update marker
+        if (!marker) {
+          marker = new google.maps.Marker({
+            position: currentPosition,
+            map: map,
+            title: 'Lokasi Anda',
+            animation: google.maps.Animation.DROP,
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 10,
+              fillColor: '#4285F4',
+              fillOpacity: 1,
+              strokeColor: '#FFFFFF',
+              strokeWeight: 2
+            }
+          });
+          
+          // Tambahkan circle untuk radius
+          new google.maps.Circle({
+            strokeColor: '#4285F4',
+            strokeOpacity: 0.8,
+            strokeWeight: 1,
+            fillColor: '#4285F4',
+            fillOpacity: 0.2,
+            map: map,
+            center: currentPosition,
+            radius: 50 // 50 meter
+          });
+        } else {
+          marker.setPosition(currentPosition);
+        }
+      }
+      
+      // Mendapatkan alamat dari koordinat (reverse geocoding)
+      function getAddressFromCoordinates(lat, lng) {
+        return new Promise((resolve, reject) => {
+          if (!mapsLoaded || !geocoder) {
+            reject("Google Maps belum dimuat");
+            return;
+          }
+          
+          try {
+            const latlng = { lat: lat, lng: lng };
+            
+            geocoder.geocode({ 'location': latlng }, (results, status) => {
+              if (status === google.maps.GeocoderStatus.OK) {
+                if (results[0]) {
+                  resolve(results[0].formatted_address);
+                } else {
+                  reject("Tidak ditemukan alamat");
+                }
+              } else {
+                reject("Geocoder gagal: " + status);
+              }
+            });
+          } catch (error) {
+            reject("Error geocoding: " + error.message);
+          }
+        });
+      }
+      
+      // Tampilkan preview foto
+      function showPhotoPreview(imageDataUrl) {
+        // Simpan data URL untuk penggunaan nanti
+        photoDataUrl = imageDataUrl;
+        
+        // Switch tampilan kamera dengan preview
+        document.getElementById('cameraSection').style.display = 'none';
+        document.getElementById('photoPreviewSection').style.display = 'block';
+        
+        // Set gambar ke element preview
+        document.getElementById('photoPreview').src = imageDataUrl;
+      }
+      
+      // Kembali ke tampilan kamera
+      function hidePhotoPreview() {
+        document.getElementById('cameraSection').style.display = 'block';
+        document.getElementById('photoPreviewSection').style.display = 'none';
+        photoDataUrl = null;
+      }
+      
+      // Fungsi absensi masuk dengan foto
+      function checkInWithPhoto() {
+        // Cek apakah kamera tersedia
+        if (!stream) {
+          showNotification("Kamera tidak tersedia. Tidak dapat melakukan absensi.", "error");
+          return;
+        }
+        
+        // Ambil foto
+        capturePhoto()
+          .then(photoDataUrl => {
+            // Tampilkan pratinjau foto
+            showPhotoPreview(photoDataUrl);
+            
+            // Set fungsi untuk tombol konfirmasi
+            document.getElementById('confirmPhotoBtn').onclick = confirmCheckIn;
+          })
+          .catch(error => {
+            showNotification(error, "error");
+          });
+      }
+      
+      // Konfirmasi absensi dengan foto
+      function confirmCheckIn() {
+        // Cek apakah foto tersedia
+        if (!photoDataUrl) {
+          showNotification("Foto tidak tersedia. Silakan coba lagi.", "error");
+          return;
+        }
+        
+        // Cek apakah lokasi tersedia
+        if (!currentPosition) {
+          showNotification("Lokasi tidak tersedia. Silakan aktifkan GPS dan coba lagi.", "error");
+          return;
+        }
+        
+        // Tampilkan loading
+        showLoading("Memproses absensi...");
+        
+        // Dapatkan alamat dari koordinat
+        const coordinates = currentPosition.lat + "," + currentPosition.lng;
+        const address = document.getElementById('address').textContent;
+        
+        // Panggil fungsi server untuk absensi
+        google.script.run
+          .withSuccessHandler(function(result) {
+            hideLoading();
+            
+            if (result.success) {
+              showNotification(result.message, "success");
+              
+              // Reset tampilan
+              hidePhotoPreview();
+              
+              // Update UI
+              document.getElementById('checkInTime').textContent = result.time;
+              document.getElementById('checkInStatusContainer').classList.add('active');
+              document.getElementById('checkInButton').disabled = true;
+              document.getElementById('checkOutButton').disabled = false;
+              
+              // Refresh statistik dan data user
+              loadUserData();
+            } else {
+              showNotification(result.message, "error");
+              hidePhotoPreview();
+            }
+          })
+          .withFailureHandler(function(error) {
+            hideLoading();
+            hidePhotoPreview();
+            showNotification("Error: " + error, "error");
+          })
+          .checkInWithPhoto(photoDataUrl, coordinates, address);
+      }
+      
+      // Fungsi absensi pulang dengan foto
+      function checkOutWithPhoto() {
+        // Cek apakah kamera tersedia
+        if (!stream) {
+          showNotification("Kamera tidak tersedia. Tidak dapat melakukan absensi.", "error");
+          return;
+        }
+        
+        // Ambil foto
+        capturePhoto()
+          .then(photoDataUrl => {
+            // Tampilkan pratinjau foto
+            showPhotoPreview(photoDataUrl);
+            
+            // Ubah fungsi untuk tombol konfirmasi
+            document.getElementById('confirmPhotoBtn').onclick = confirmCheckOut;
+          })
+          .catch(error => {
+            showNotification(error, "error");
+          });
+      }
+      
+      // Konfirmasi absensi pulang dengan foto
+      function confirmCheckOut() {
+        // Cek apakah foto tersedia
+        if (!photoDataUrl) {
+          showNotification("Foto tidak tersedia. Silakan coba lagi.", "error");
+          return;
+        }
+        
+        // Cek apakah lokasi tersedia
+        if (!currentPosition) {
+          showNotification("Lokasi tidak tersedia. Silakan aktifkan GPS dan coba lagi.", "error");
+          return;
+        }
+        
+        // Tampilkan loading
+        showLoading("Memproses absensi pulang...");
+        
+        // Dapatkan alamat dari koordinat
+        const coordinates = currentPosition.lat + "," + currentPosition.lng;
+        const address = document.getElementById('address').textContent;
+        
+        // Panggil fungsi server untuk absensi
+        google.script.run
+          .withSuccessHandler(function(result) {
+            hideLoading();
+            
+            if (result.success) {
+              showNotification(result.message, "success");
+              
+              // Reset tampilan
+              hidePhotoPreview();
+              
+              // Update UI
+              document.getElementById('checkOutTime').textContent = result.time;
+              document.getElementById('checkOutStatusContainer').classList.add('active');
+              document.getElementById('checkOutButton').disabled = true;
+              
+              // Refresh statistik dan data user
+              loadUserData();
+            } else {
+              showNotification(result.message, "error");
+              hidePhotoPreview();
+            }
+          })
+          .withFailureHandler(function(error) {
+            hideLoading();
+            hidePhotoPreview();
+            showNotification("Error: " + error, "error");
+          })
+          .checkOutWithPhoto(photoDataUrl, coordinates, address);
+      }
+      
+      // Update tanggal dan waktu otomatis
+      function updateDateTime() {
+        const now = new Date();
+        
+        // Format tanggal
+        const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        
+        const formattedDate = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+        
+        // Format waktu
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        const formattedTime = `${hours}:${minutes}:${seconds}`;
+        
+        // Update elemen
+        document.getElementById('currentDate').textContent = formattedDate;
+        document.getElementById('currentTime').textContent = formattedTime;
+        
+        // Update setiap detik
+        setTimeout(updateDateTime, 1000);
+      }
+      
+      // Dapatkan jadwal kerja hari ini
+      function getWorkScheduleToday() {
+        google.script.run
+          .withSuccessHandler(function(result) {
+            jadwalKerjaHariIni = result;
+            
+            // Update tampilan jadwal kerja
+            const scheduleInfo = document.getElementById('workScheduleInfo');
+            const workHoursToday = document.getElementById('workHoursToday');
+            
+            if (result.status === "Libur") {
+              scheduleInfo.innerHTML = `<span class="badge bg-red-100 text-red-800 py-1 px-2 rounded">Hari Libur</span> ${result.isHariKhusus ? ' - ' + result.keterangan : ''}`;
+              workHoursToday.textContent = "Libur";
+            } else if (result.status === "Setengah Hari") {
+              scheduleInfo.innerHTML = `<span class="badge bg-yellow-100 text-yellow-800 py-1 px-2 rounded">Setengah Hari</span> ${result.isHariKhusus ? ' - ' + result.keterangan : ''}`;
+              
+              const waktuMulai = formatWaktuObjek(result.waktuMulai);
+              const waktuSelesai = formatWaktuObjek(result.waktuSelesai);
+              workHoursToday.textContent = `${waktuMulai} - ${waktuSelesai}`;
+            } else {
+              scheduleInfo.innerHTML = `<span class="badge bg-green-100 text-green-800 py-1 px-2 rounded">Hari Kerja Normal</span>`;
+              
+              const waktuMulai = formatWaktuObjek(result.waktuMulai);
+              const waktuSelesai = formatWaktuObjek(result.waktuSelesai);
+              workHoursToday.textContent = `${waktuMulai} - ${waktuSelesai}`;
+            }
+          })
+          .withFailureHandler(function(error) {
+            console.error("Error getting work schedule:", error);
+            document.getElementById('workScheduleInfo').textContent = "Gagal memuat jadwal kerja";
+          })
+          .getJadwalKerja(new Date());
+      }
+      
+      // Format objek waktu ke string
+      function formatWaktuObjek(waktuObj) {
+        if (!waktuObj || typeof waktuObj.jam !== 'number') return "00:00";
+        const jam = String(waktuObj.jam).padStart(2, '0');
+        const menit = String(waktuObj.menit).padStart(2, '0');
+        return `${jam}:${menit}`;
+      }
+      
+      // Tampilkan notifikasi
+      function showNotification(message, type = "info") {
+        const container = document.getElementById('notification-container');
+        
+        // Buat elemen notifikasi
+        const notification = document.createElement('div');
+        notification.className = 'notification ' + type;
+        notification.textContent = message;
+        
+        // Tambahkan ke container
+        container.appendChild(notification);
+        
+        // Hilangkan setelah beberapa detik
+        setTimeout(() => {
+          notification.classList.add('fade-out');
+          setTimeout(() => {
+            notification.remove();
+          }, 500);
+        }, 5000);
+      }
+      
+      // Tampilkan loading
+      function showLoading(message = "Memuat...") {
+        const overlay = document.getElementById('loading-overlay');
+        const messageElement = overlay.querySelector('.loading-message');
+        
+        messageElement.textContent = message;
+        overlay.style.display = 'flex';
+      }
+      
+      // Sembunyikan loading
+      function hideLoading() {
+        document.getElementById('loading-overlay').style.display = 'none';
+      }
+      
+      // Load data pengguna dan absensi
+      function loadUserData() {
+        showLoading("Memuat data...");
+        
+        google.script.run
+          .withSuccessHandler(function(result) {
+            hideLoading();
+            
+            if (!result || !result.user) {
+              showNotification("Sesi telah berakhir. Silakan login kembali.", "error");
+              navigateTo('login');
+              return;
+            }
+            
+            // Update nama dan avatar pengguna
+            const userName = document.getElementById('userName');
+            const userAvatar = document.getElementById('userAvatar');
+            
+            if (userName) userName.textContent = result.user.name;
+            if (userAvatar) userAvatar.textContent = result.user.name.charAt(0).toUpperCase();
+            
+            // Update data absensi hari ini
+            if (result.attendance) {
+              if (result.attendance.checkIn) {
+                document.getElementById('checkInTime').textContent = result.attendance.checkIn;
+                document.getElementById('checkInStatusContainer').classList.add('active');
+                document.getElementById('checkInButton').disabled = true;
+                document.getElementById('checkOutButton').disabled = false;
+              }
+              
+              if (result.attendance.checkOut) {
+                document.getElementById('checkOutTime').textContent = result.attendance.checkOut;
+                document.getElementById('checkOutStatusContainer').classList.add('active');
+                document.getElementById('checkOutButton').disabled = true;
+              }
+              
+              // Update durasi kerja jika ada
+              if (result.attendance.checkIn && result.attendance.checkOut) {
+                const workDuration = document.getElementById('workDurationToday');
+                
+                // Hitung durasi antara check-in dan check-out
+                const checkInTime = result.attendance.checkIn;
+                const checkOutTime = result.attendance.checkOut;
+                
+                // Call server function to calculate duration
+                google.script.run
+                  .withSuccessHandler(function(duration) {
+                    workDuration.textContent = duration;
+                  })
+                  .withFailureHandler(function(error) {
+                    console.error("Error calculating duration:", error);
+                    workDuration.textContent = "-";
+                  })
+                  .hitungDurasi(checkInTime, checkOutTime);
+              }
+            }
+            
+            // Update statistik
+            if (result.stats) {
+              document.getElementById('presentDays').textContent = result.stats.presentDays;
+              document.getElementById('leaveDays').textContent = result.stats.leaveDays;
+              document.getElementById('attendancePercentage').textContent = result.stats.attendancePercentage + "%";
+            }
+            
+            // Get work hours stats
+            google.script.run
+              .withSuccessHandler(function(workHoursStats) {
+                if (workHoursStats) {
+                  document.getElementById('totalWorkHours').textContent = workHoursStats.totalHours;
+                }
+              })
+              .getWorkHoursStats();
+          })
+          .withFailureHandler(function(error) {
+            hideLoading();
+            showNotification("Error: " + error, "error");
+          })
+          .getUserDataWithAttendance();
+      }
+      
+      // Logout function
+      function logout() {
+        showLoading("Memproses logout...");
+        
+        google.script.run
+          .withSuccessHandler(function(result) {
+            hideLoading();
+            
+            if (result.success) {
+              navigateTo('login');
+            } else {
+              showNotification("Gagal logout: " + result.message, "error");
+            }
+          })
+          .withFailureHandler(function(error) {
+            hideLoading();
+            showNotification("Error: " + error, "error");
+          })
+          .logout();
+      }
+      
+      // Kirim laporan
+      function sendReport() {
+        showLoading("Mengirim laporan ke email...");
+        
+        google.script.run
+          .withSuccessHandler(function(result) {
+            hideLoading();
+            
+            if (result.success) {
+              showNotification(result.message, "success");
+            } else {
+              showNotification(result.message || "Gagal mengirim laporan", "error");
+            }
+          })
+          .withFailureHandler(function(error) {
+            hideLoading();
+            showNotification("Error: " + error, "error");
+          })
+          .sendReport();
+      }
+      
+      // Inisialisasi halaman
+      function initPage() {
+        console.log("Initializing page...");
+        
+        // Update tanggal dan waktu
+        updateDateTime();
+        
+        // Inisialisasi kamera
+        initCamera();
+        
+        // Dapatkan jadwal kerja hari ini
+        getWorkScheduleToday();
+        
+        // Load data pengguna
+        loadUserData();
+        
+        // Event listeners
+        document.getElementById('checkInButton').addEventListener('click', checkInWithPhoto);
+        document.getElementById('checkOutButton').addEventListener('click', checkOutWithPhoto);
+        document.getElementById('switchCameraBtn').addEventListener('click', switchCamera);
+        document.getElementById('retakePhotoBtn').addEventListener('click', hidePhotoPreview);
+        document.getElementById('sendReportButton').addEventListener('click', sendReport);
+      }
+      
+      // Jalankan inisialisasi saat dokumen selesai dimuat
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log("DOM content loaded");
+        initPage();
+      });
+      
+      // Cleanup saat halaman ditutup
+      window.addEventListener('beforeunload', function() {
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+        }
+      });
+    </script>
+
+    <?!= include('JavaScript'); ?>
+  </body>
+</html>
