@@ -13,60 +13,209 @@
  * Routing antar halaman aplikasi
  */
 function doGet(e) {
-  // Routing berdasarkan parameter page
-  var page = (e && e.parameter && e.parameter.page) ? e.parameter.page : 'login';
-  Logger.log("Halaman yang akan ditampilkan: " + page);
+  // Setup basic logging
+  Logger.log("Access time (UTC): " + new Date().toISOString());
   
   try {
-    // Cek apakah user sudah login kecuali untuk halaman login
-    if (page !== 'login' && isUserLoggedIn()) {
-      // Perbarui session setiap kali halaman diakses
+    // Validasi parameter e dan e.parameter
+    e = e || {};
+    e.parameter = e.parameter || {};
+    
+    Logger.log("Query parameters: " + JSON.stringify(e.parameter));
+    
+    // Get page parameter with default to 'login' with safe navigation
+    const page = (e.parameter?.page || 'login').toLowerCase();
+    Logger.log("Requested page: " + page);
+
+    // Get user session
+    const userSession = getUserSession();
+    Logger.log("User session exists: " + (userSession !== null));
+
+    // Define allowed pages and their configurations
+    const pages = {
+      login: {
+        title: 'Login - GASPUL Hadir',
+        template: 'Login',
+        public: true
+      },
+      home: {
+        title: 'Beranda - GASPUL Hadir',
+        template: 'Home',
+        requireAuth: true
+      },
+      history: {
+        title: 'Riwayat - GASPUL Hadir',
+        template: 'History',
+        requireAuth: true
+      },
+      profile: {
+        title: 'Profil - GASPUL Hadir',
+        template: 'Profile',
+        requireAuth: true
+      }
+    };
+
+    // Get page configuration with fallback to login
+    const pageConfig = pages[page] || pages.login;
+
+    // Check authentication for protected pages
+    if (pageConfig.requireAuth && !userSession) {
+      Logger.log("Auth required but user not logged in. Redirecting to login.");
+      return createHtmlOutput(pages.login);
+    }
+
+    // If user is logged in but accessing login page, redirect to home
+    if (userSession && page === 'login') {
+      Logger.log("Logged in user accessing login page. Redirecting to home.");
+      return createHtmlOutput(pages.home);
+    }
+
+    // Refresh session if user is logged in
+    if (userSession) {
       refreshUserSession();
-    } else if (page !== 'login') {
-      Logger.log("User belum login, redirect ke halaman login");
-      page = 'login';
+    }
+
+    // Return requested page
+    return createHtmlOutput(pageConfig);
+
+  } catch (error) {
+    Logger.log("Error in doGet: " + error.toString());
+    console.error("doGet error:", error);
+
+    // Return error page with more details
+    return HtmlService.createTemplate(
+      `<div class="error-container">
+        <h1>Terjadi Kesalahan</h1>
+        <p>${error.message || 'Unknown error occurred'}</p>
+        <p class="error-details">Time: ${new Date().toISOString()}</p>
+        <button onclick="window.location.href='?page=login'">Kembali ke Login</button>
+       </div>
+       <style>
+         .error-container {
+           text-align: center;
+           padding: 2rem;
+           max-width: 600px;
+           margin: 2rem auto;
+           font-family: Arial, sans-serif;
+         }
+         .error-details {
+           color: #666;
+           font-size: 0.9rem;
+           margin-top: 1rem;
+         }
+         button {
+           padding: 0.5rem 1rem;
+           margin-top: 1rem;
+           background: #007bff;
+           color: white;
+           border: none;
+           border-radius: 4px;
+           cursor: pointer;
+           font-size: 1rem;
+         }
+         button:hover {
+           background: #0056b3;
+         }
+       </style>`
+    )
+    .evaluate()
+    .setTitle('Error - GASPUL Hadir')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+}
+
+// Helper function untuk createHtmlOutput
+function createHtmlOutput(pageConfig) {
+  try {
+    const template = HtmlService.createTemplateFromFile(pageConfig.template);
+    
+    // Add user data to template if available
+    const userSession = getUserSession();
+    if (userSession) {
+      template.user = userSession;
     }
     
-    // Routing ke halaman yang sesuai
-    if (page == 'login') {
-      return HtmlService.createTemplateFromFile('Login')
-        .evaluate()
-        .setTitle('Login - GASPUL Hadir')
-        .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-    } else if (page == 'home') {
-      return HtmlService.createTemplateFromFile('Home')
-        .evaluate()
-        .setTitle('Beranda - GASPUL Hadir')
-        .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-    } else if (page == 'history') {
-      return HtmlService.createTemplateFromFile('History')
-        .evaluate()
-        .setTitle('Riwayat - GASPUL Hadir')
-        .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-    } else if (page == 'profile') {
-      return HtmlService.createTemplateFromFile('Profile')
-        .evaluate()
-        .setTitle('Profil - GASPUL Hadir')
-        .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-    } else {
-      // Halaman default jika tidak ditemukan
-      return HtmlService.createTemplateFromFile('Login')
-        .evaluate()
-        .setTitle('Login - GASPUL Hadir')
-        .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    return template
+      .evaluate()
+      .setTitle(pageConfig.title)
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  } catch (error) {
+    Logger.log("Error in createHtmlOutput: " + error.toString());
+    throw error; // Re-throw untuk ditangkap oleh error handler di doGet
+  }
+}
+
+// Helper function untuk refresh session
+function refreshUserSession() {
+  try {
+    const userSession = getUserSession();
+    if (userSession) {
+      userSession.lastActivity = new Date().getTime();
+      PropertiesService.getUserProperties().setProperty(
+        'userSession',
+        JSON.stringify(userSession)
+      );
     }
   } catch (error) {
-    Logger.log("Error pada fungsi doGet: " + error.message);
-    // Tampilkan halaman error
-    return HtmlService.createHtmlOutput('<h1>Terjadi Kesalahan</h1><p>' + error.message + '</p>')
-      .setTitle('Error - GASPUL Hadir')
-      .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+    Logger.log("Error refreshing session: " + error.toString());
+    // Don't throw error here, just log it
   }
+}
+
+// Helper function to create HTML output
+function createHtmlOutput(pageConfig) {
+  const template = HtmlService.createTemplateFromFile(pageConfig.template);
+  
+  // Add user data to template if available
+  const userSession = getUserSession();
+  if (userSession) {
+    template.user = userSession;
+  }
+  
+  return template
+    .evaluate()
+    .setTitle(pageConfig.title)
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+// Helper function to get user session
+function getUserSession() {
+  try {
+    const userProps = PropertiesService.getUserProperties();
+    const sessionData = userProps.getProperty('userSession');
+    return sessionData ? JSON.parse(sessionData) : null;
+  } catch (error) {
+    Logger.log("Error getting user session: " + error.toString());
+    return null;
+  }
+}
+
+// Helper function to refresh user session
+function refreshUserSession() {
+  try {
+    const userSession = getUserSession();
+    if (userSession) {
+      userSession.lastActivity = new Date().getTime();
+      PropertiesService.getUserProperties().setProperty(
+        'userSession',
+        JSON.stringify(userSession)
+      );
+    }
+  } catch (error) {
+    Logger.log("Error refreshing session: " + error.toString());
+  }
+}
+
+// Helper function to check if session is expired
+function isSessionExpired(session) {
+  if (!session || !session.lastActivity) return true;
+  
+  const sessionTimeout = 30 * 60 * 1000; // 30 minutes
+  const currentTime = new Date().getTime();
+  return (currentTime - session.lastActivity) > sessionTimeout;
 }
 
 /**
@@ -780,8 +929,25 @@ function formatTanggal(tanggal) {
  * @param {Date} tanggal - Tanggal yang akan dicek
  * @return {object} Informasi lengkap pengaturan jadwal kerja
  */
+// Deklarasi variabel cache di luar fungsi
+let cachedSchedule = null;
+let lastCacheTime = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 menit dalam milliseconds
+
 function getJadwalKerja(tanggal) {
   try {
+    if (!waktuMulai || typeof waktuMulai.jam === 'undefined' || typeof waktuMulai.menit === 'undefined') {
+        waktuMulai = { jam: 8, menit: 0, status: 'default' };
+      }
+
+    if (!waktuSelesai || typeof waktuSelesai.jam === 'undefined' || typeof waktuSelesai.menit === 'undefined') {
+        waktuSelesai = { jam: 17, menit: 0, status: 'default' };
+      }
+    // Cek cache terlebih dahulu
+    if (cachedSchedule && lastCacheTime && (new Date() - lastCacheTime) < CACHE_DURATION) {
+      return cachedSchedule;
+    }
+
     // Format tanggal untuk pengecekan hari khusus
     var tanggalStr = Utilities.formatDate(tanggal, "GMT+7", "yyyy-MM-dd");
     var hariDalamMinggu = tanggal.getDay();
@@ -789,8 +955,10 @@ function getJadwalKerja(tanggal) {
     // Cek apakah ini hari khusus
     var hariKhususInfo = cekHariKhusus(tanggalStr);
     
+    let result; // Deklarasi variable untuk hasil
+    
     if (hariKhususInfo) {
-      return {
+      result = {
         tanggal: tanggalStr,
         hariDalamMinggu: hariDalamMinggu,
         keterangan: hariKhususInfo.keterangan,
@@ -800,41 +968,53 @@ function getJadwalKerja(tanggal) {
         batasTerlambat: hariKhususInfo.batasTerlambat,
         isHariKhusus: true
       };
-    }
-    
-    // Jika bukan hari khusus, dapatkan pengaturan reguler berdasarkan hari dalam minggu
-    var waktuMulai = getWaktuMulaiUntukHari(hariDalamMinggu);
-    var waktuSelesai = getWaktuSelesaiUntukHari(hariDalamMinggu);
-    
-    // Dapatkan batas terlambat dari sheet
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('PengaturanWaktu');
-    var batasTerlambat = 15; // Default
-    
-    if (sheet) {
-      var data = sheet.getDataRange().getValues();
-      if (data.length > hariDalamMinggu + 1 && data[0].length > 3) {
-        batasTerlambat = parseInt(data[hariDalamMinggu + 1][3], 10) || 15;
+    } else {
+      // Jika bukan hari khusus, dapatkan pengaturan reguler
+      var waktuMulai = getWaktuMulaiUntukHari(hariDalamMinggu);
+      var waktuSelesai = getWaktuSelesaiUntukHari(hariDalamMinggu);
+      
+      // Dapatkan batas terlambat dari sheet
+      var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('PengaturanWaktu');
+      var batasTerlambat = 15; // Default
+      
+      if (sheet) {
+        var data = sheet.getDataRange().getValues();
+        if (data.length > hariDalamMinggu + 1 && data[0].length > 3) {
+          batasTerlambat = parseInt(data[hariDalamMinggu + 1][3], 10) || 15;
+        }
       }
+      
+      // Nama hari dalam Bahasa Indonesia
+      var namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+      
+      result = {
+        tanggal: tanggalStr,
+        hariDalamMinggu: hariDalamMinggu,
+        namaHari: namaHari[hariDalamMinggu],
+        status: waktuMulai.status,
+        waktuMulai: waktuMulai,
+        waktuSelesai: waktuSelesai,
+        batasTerlambat: batasTerlambat,
+        isHariKhusus: false
+      };
     }
+
+    // Simpan ke cache
+    cachedSchedule = result;
+    lastCacheTime = new Date();
     
-    // Nama hari dalam Bahasa Indonesia
-    var namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    // Logging untuk debugging
+    Logger.log("Jadwal berhasil diambil untuk tanggal: " + tanggalStr);
+    Logger.log("Cache time: " + lastCacheTime.toISOString());
     
-    return {
-      tanggal: tanggalStr,
-      hariDalamMinggu: hariDalamMinggu,
-      namaHari: namaHari[hariDalamMinggu],
-      status: waktuMulai.status,
-      waktuMulai: waktuMulai,
-      waktuSelesai: waktuSelesai,
-      batasTerlambat: batasTerlambat,
-      isHariKhusus: false
-    };
+    return result;
+
   } catch (error) {
     Logger.log("Error mendapatkan jadwal kerja: " + error.message);
+    console.error("Error detail:", error);
     
     // Kembalikan default
-    return {
+    const defaultResult = {
       tanggal: Utilities.formatDate(tanggal, "GMT+7", "yyyy-MM-dd"),
       hariDalamMinggu: tanggal.getDay(),
       status: "Error",
@@ -844,6 +1024,208 @@ function getJadwalKerja(tanggal) {
       isHariKhusus: false,
       error: error.message
     };
+
+    // Simpan error ke cache untuk menghindari request berlebihan
+    cachedSchedule = defaultResult;
+    lastCacheTime = new Date();
+    
+    return defaultResult;
+  }
+}
+
+// Fungsi helper untuk reset cache jika diperlukan
+function resetJadwalCache() {
+  cachedSchedule = null;
+  lastCacheTime = null;
+  Logger.log("Cache jadwal direset");
+}
+
+function logAttendanceError(error, context = {}) {
+  try {
+    const errorSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('ErrorLogs');
+    
+    // Validasi error object
+    const errorMessage = error?.message || String(error) || "Unknown error";
+    const errorStack = error?.stack || "No stack trace available";
+    const timestamp = new Date();
+    const contextStr = JSON.stringify(context || {});
+    
+    // Log ke console terlebih dahulu
+    Logger.log("Attendance Error at " + timestamp.toISOString());
+    Logger.log("Error message: " + errorMessage);
+    Logger.log("Context: " + contextStr);
+    Logger.log("Stack trace: " + errorStack);
+    
+    // Jika sheet ErrorLogs ada, tambahkan error log
+    if (errorSheet) {
+      errorSheet.appendRow([
+        timestamp,
+        errorMessage,
+        contextStr,
+        errorStack,
+        Session.getActiveUser().getEmail(),
+        ScriptApp.getScriptId()
+      ]);
+    }
+    
+    // Return error object untuk chaining
+    return {
+      timestamp: timestamp,
+      message: errorMessage,
+      context: context,
+      stack: errorStack
+    };
+    
+  } catch (loggingError) {
+    // Fallback jika terjadi error saat logging
+    Logger.log("Error in logAttendanceError: " + loggingError);
+    console.error("Failed to log error:", loggingError);
+    return null;
+  }
+}
+
+// Fungsi helper untuk format error
+function formatError(error) {
+  if (typeof error === 'string') {
+    return {
+      message: error,
+      stack: new Error().stack
+    };
+  }
+  if (error instanceof Error) {
+    return error;
+  }
+  return new Error(String(error));
+}
+
+// Contoh penggunaan dalam getAttendanceHistory
+function getAttendanceHistory(startDate, endDate) {
+  try {
+    // Validasi input
+    if (!startDate || !endDate) {
+      throw new Error("Tanggal tidak valid");
+    }
+    
+    const user = getUserSession();
+    if (!user) {
+      throw new Error("Sesi telah berakhir");
+    }
+    
+    // Log akses
+    Logger.log(`Accessing attendance history for user ${user.username}`);
+    Logger.log(`Date range: ${startDate} to ${endDate}`);
+    
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Attendance');
+    if (!sheet) {
+      throw new Error("Sheet Attendance tidak ditemukan");
+    }
+    
+    // Proses data...
+    const data = sheet.getDataRange().getValues();
+    
+    // Filter dan proses data...
+    const attendance = processAttendanceData(data, user, startDate, endDate);
+    
+    return {
+      success: true,
+      data: attendance
+    };
+    
+  } catch (error) {
+    // Format error dan log
+    const formattedError = formatError(error);
+    logAttendanceError(formattedError, {
+      startDate: startDate,
+      endDate: endDate,
+      functionName: 'getAttendanceHistory'
+    });
+    
+    return {
+      success: false,
+      message: "Gagal memuat data: " + formattedError.message
+    };
+  }
+}
+
+// Fungsi helper untuk memproses data absensi
+function processAttendanceData(data, user, startDate, endDate) {
+  try {
+    const headers = data[0];
+    const startDateTime = new Date(startDate);
+    const endDateTime = new Date(endDate);
+    
+    // Filter data
+    const filteredData = data.slice(1).filter(row => {
+      try {
+        const rowDate = new Date(row[2]);
+        return row[1] === user.nip &&
+               rowDate >= startDateTime &&
+               rowDate <= endDateTime;
+      } catch (e) {
+        logAttendanceError(e, {
+          row: row,
+          functionName: 'processAttendanceData/filter'
+        });
+        return false;
+      }
+    });
+    
+    // Map data ke format yang diinginkan
+    const attendance = filteredData.map(row => {
+      try {
+        return {
+          date: formatDate(new Date(row[2])),
+          checkIn: row[3] || null,
+          checkOut: row[4] || null,
+          status: row[5] || "Tidak Ada Status",
+          keterangan: row[6] || "",
+          checkInPhoto: row[7] || null,
+          location: row[9] || null,
+          checkOutPhoto: row[10] || null,
+          totalHours: calculateWorkHours(row[3], row[4])
+        };
+      } catch (e) {
+        logAttendanceError(e, {
+          row: row,
+          functionName: 'processAttendanceData/map'
+        });
+        return null;
+      }
+    }).filter(item => item !== null);
+    
+    return {
+      attendance: attendance,
+      summary: calculateSummary(attendance),
+      workHours: calculateWorkHoursChart(attendance)
+    };
+    
+  } catch (error) {
+    logAttendanceError(error, {
+      functionName: 'processAttendanceData'
+    });
+    throw error;
+  }
+}
+
+// Helper function untuk menghitung jam kerja
+function calculateWorkHours(checkIn, checkOut) {
+  if (!checkIn || !checkOut) return 0;
+  
+  try {
+    const [checkInHour, checkInMin] = checkIn.split(':').map(Number);
+    const [checkOutHour, checkOutMin] = checkOut.split(':').map(Number);
+    
+    const totalMinutes = (checkOutHour * 60 + checkOutMin) - 
+                        (checkInHour * 60 + checkInMin);
+    
+    return Math.max(0, totalMinutes / 60);
+  } catch (e) {
+    logAttendanceError(e, {
+      checkIn: checkIn,
+      checkOut: checkOut,
+      functionName: 'calculateWorkHours'
+    });
+    return 0;
   }
 }
 
@@ -874,90 +1256,132 @@ function formatWaktuKeString(waktuObj) {
  */
 function hitungStatusKehadiran(waktuAbsen, jadwalKerja, tipeAbsen) {
   try {
+    // Validasi parameter
+    if (!waktuAbsen || !(waktuAbsen instanceof Date)) {
+      throw new Error("Parameter waktuAbsen tidak valid");
+    }
+    
+    if (!jadwalKerja || typeof jadwalKerja !== 'object') {
+      throw new Error("Parameter jadwalKerja tidak valid");
+    }
+    
+    if (!tipeAbsen || !['masuk', 'pulang'].includes(tipeAbsen)) {
+      throw new Error("Parameter tipeAbsen tidak valid");
+    }
+    
+    // Cek status hari libur
     if (jadwalKerja.status === "Libur") {
       return {
         status: "Lembur",
-        keterangan: "Absen pada hari libur",
-        selisihMenit: 0
+        keterangan: jadwalKerja.isHariKhusus ? 
+          `Lembur pada ${jadwalKerja.keterangan}` : 
+          "Lembur pada hari libur",
+        selisihMenit: 0,
+        timestamp: new Date().toISOString()
       };
     }
     
     var jamAbsen = waktuAbsen.getHours();
     var menitAbsen = waktuAbsen.getMinutes();
     
+    // Validasi waktu jadwal
     if (tipeAbsen === 'masuk') {
+      if (!jadwalKerja.waktuMulai || 
+          typeof jadwalKerja.waktuMulai.jam !== 'number' || 
+          typeof jadwalKerja.waktuMulai.menit !== 'number') {
+        throw new Error("Waktu mulai tidak valid dalam jadwal");
+      }
+      
       var waktuMulai = jadwalKerja.waktuMulai;
-      var batasTerlambat = jadwalKerja.batasTerlambat;
+      var batasTerlambat = jadwalKerja.batasTerlambat || 15; // Default 15 menit
       
       // Konversi ke menit untuk perbandingan
       var totalMenitJadwal = waktuMulai.jam * 60 + waktuMulai.menit;
       var totalMenitAbsen = jamAbsen * 60 + menitAbsen;
-      
-      // Hitung selisih
       var selisihMenit = totalMenitAbsen - totalMenitJadwal;
+      
+      // Format waktu untuk keterangan
+      var waktuMulaiStr = `${String(waktuMulai.jam).padStart(2, '0')}:${String(waktuMulai.menit).padStart(2, '0')}`;
       
       if (selisihMenit <= 0) {
         return {
           status: "Hadir",
-          keterangan: "Tepat waktu",
-          selisihMenit: selisihMenit
+          keterangan: `Tepat waktu (${waktuMulaiStr})`,
+          selisihMenit: selisihMenit,
+          timestamp: new Date().toISOString()
         };
       } else if (selisihMenit <= batasTerlambat) {
         return {
           status: "Hadir",
-          keterangan: "Masih dalam batas toleransi keterlambatan",
-          selisihMenit: selisihMenit
+          keterangan: `Masih dalam toleransi (Terlambat ${selisihMenit} menit)`,
+          selisihMenit: selisihMenit,
+          timestamp: new Date().toISOString()
         };
       } else {
         return {
           status: "Terlambat",
-          keterangan: "Terlambat " + selisihMenit + " menit",
-          selisihMenit: selisihMenit
+          keterangan: `Terlambat ${selisihMenit} menit (Jadwal: ${waktuMulaiStr})`,
+          selisihMenit: selisihMenit,
+          timestamp: new Date().toISOString()
         };
       }
     } else if (tipeAbsen === 'pulang') {
+      if (!jadwalKerja.waktuSelesai || 
+          typeof jadwalKerja.waktuSelesai.jam !== 'number' || 
+          typeof jadwalKerja.waktuSelesai.menit !== 'number') {
+        throw new Error("Waktu selesai tidak valid dalam jadwal");
+      }
+      
       var waktuSelesai = jadwalKerja.waktuSelesai;
-      var toleransiPulangAwal = waktuSelesai.toleransiPulangAwal || 0;
+      var toleransiPulangAwal = jadwalKerja.toleransiPulangAwal || 30; // Default 30 menit
       
       // Konversi ke menit untuk perbandingan
       var totalMenitJadwal = waktuSelesai.jam * 60 + waktuSelesai.menit;
       var totalMenitAbsen = jamAbsen * 60 + menitAbsen;
-      
-      // Hitung selisih
       var selisihMenit = totalMenitAbsen - totalMenitJadwal;
       
+      // Format waktu untuk keterangan
+      var waktuSelesaiStr = `${String(waktuSelesai.jam).padStart(2, '0')}:${String(waktuSelesai.menit).padStart(2, '0')}`;
+      
       if (selisihMenit >= 0) {
+        let status = selisihMenit > 60 ? "Lembur" : "Pulang";
+        let keterangan = selisihMenit > 60 ? 
+          `Lembur ${Math.floor(selisihMenit/60)} jam ${selisihMenit%60} menit` : 
+          `Tepat waktu (${waktuSelesaiStr})`;
+        
         return {
-          status: "Pulang",
-          keterangan: "Tepat waktu atau lembur",
-          selisihMenit: selisihMenit
+          status: status,
+          keterangan: keterangan,
+          selisihMenit: selisihMenit,
+          timestamp: new Date().toISOString()
         };
       } else if (selisihMenit >= -toleransiPulangAwal) {
         return {
           status: "Pulang",
-          keterangan: "Masih dalam batas toleransi pulang awal",
-          selisihMenit: selisihMenit
+          keterangan: `Dalam toleransi pulang awal (${Math.abs(selisihMenit)} menit)`,
+          selisihMenit: selisihMenit,
+          timestamp: new Date().toISOString()
         };
       } else {
         return {
           status: "Pulang Awal",
-          keterangan: "Pulang lebih awal " + Math.abs(selisihMenit) + " menit",
-          selisihMenit: selisihMenit
+          keterangan: `Pulang ${Math.abs(selisihMenit)} menit lebih awal (Jadwal: ${waktuSelesaiStr})`,
+          selisihMenit: selisihMenit,
+          timestamp: new Date().toISOString()
         };
       }
     }
     
-    return {
-      status: "Tidak Valid",
-      keterangan: "Tipe absen tidak valid",
-      selisihMenit: 0
-    };
   } catch (error) {
     Logger.log("Error menghitung status kehadiran: " + error.message);
+    console.error("Detail error:", error);
+    
     return {
       status: "Error",
       keterangan: "Terjadi kesalahan: " + error.message,
-      selisihMenit: 0
+      selisihMenit: 0,
+      timestamp: new Date().toISOString(),
+      error: error
     };
   }
 }
@@ -1257,6 +1681,7 @@ function getUserDataWithAttendance() {
   }
 }
 
+
 /**
  * Fungsi untuk melakukan check-in dengan foto
  * Menyimpan data masuk karyawan, foto, lokasi, dan informasi waktu
@@ -1269,12 +1694,39 @@ function getUserDataWithAttendance() {
 function checkInWithPhoto(photoDataUrl, gps, location) {
   try {
     // Dapatkan data user dari session
-    var user = getUserSession();
-    if (!user) {
+    var userSession = getUserSession();
+    if (!userSession) {
       return { success: false, message: "Sesi telah berakhir" };
     }
     
-    var nip = user.nip;
+    var nip = userSession.nip;
+    
+    // Validasi input
+    if (!photoDataUrl) {
+      return { success: false, message: "Foto tidak tersedia" };
+    }
+    
+    // Validasi GPS
+    if (!gps || gps.trim() === "") {
+      return { 
+        success: false, 
+        message: "Data GPS tidak tersedia. Pastikan lokasi diizinkan." 
+      };
+    }
+    
+    // Validasi format GPS
+    var gpsCoords = gps.split(',');
+    if (gpsCoords.length !== 2 || isNaN(gpsCoords[0]) || isNaN(gpsCoords[1])) {
+      return { 
+        success: false, 
+        message: "Format GPS tidak valid" 
+      };
+    }
+    
+    // Jika lokasi tidak ada, coba dapatkan dari koordinat
+    if (!location || location.trim() === "") {
+      location = getLocationAddress(gpsCoords[0], gpsCoords[1]);
+    }
     
     // Dapatkan informasi waktu dan tanggal saat ini
     var now = new Date();
@@ -1283,73 +1735,80 @@ function checkInWithPhoto(photoDataUrl, gps, location) {
     
     // Dapatkan jadwal kerja untuk hari ini
     var jadwalKerja = getJadwalKerja(now);
+    if (!jadwalKerja) {
+      return { 
+        success: false, 
+        message: "Gagal mendapatkan jadwal kerja" 
+      };
+    }
     
     // Hitung status kehadiran
     var statusKehadiran = hitungStatusKehadiran(now, jadwalKerja, 'masuk');
     
     // Cek apakah sudah absen masuk hari ini
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Attendance');
-    var data = sheet.getDataRange().getValues();
+    if (!sheet) {
+      throw new Error("Sheet Attendance tidak ditemukan");
+    }
     
+    var data = sheet.getDataRange().getValues();
+    var existingRow = -1;
+    
+    // Cari data absensi hari ini
     for (var i = 1; i < data.length; i++) {
-      if (data[i][1] == nip && data[i][2] == date) {
-        // Jika sudah absen masuk dan jam masuk sudah terisi, cegah absen masuk ganda
+      if (data[i][1] === nip && data[i][2] === date) {
+        existingRow = i + 1;
+        // Cek jika sudah absen masuk
         if (data[i][3] && data[i][3] !== "") {
           return { 
             success: false, 
             message: "Anda sudah melakukan absen masuk hari ini" 
           };
         }
-        
-        // Jika belum, update baris yang sudah ada
-        sheet.getRange(i+1, 4).setValue(time);
-        
-        // Update status dan keterangan
-        sheet.getRange(i+1, 6).setValue(statusKehadiran.status);
-        sheet.getRange(i+1, 7).setValue(statusKehadiran.keterangan);
-        
-        // Simpan foto absen masuk dengan penamaan standar
-        if (!data[i][7] || data[i][7] === "") {
-          // Kompres dan simpan foto
-          var compressedPhotoUrl = kompresidanSimpanFoto(photoDataUrl, nip, "masuk", now);
-          sheet.getRange(i+1, 8).setValue(compressedPhotoUrl);
-        }
-        
-        // Update GPS dan lokasi
-        sheet.getRange(i+1, 9).setValue(gps);
-        sheet.getRange(i+1, 10).setValue(location);
-        
-        return { 
-          success: true, 
-          message: "Absen masuk berhasil", 
-          time: time 
-        };
+        break;
       }
     }
     
-    // Belum absen, buat entri baru
-    var dayName = jadwalKerja.namaHari;
-    
-    var newId = sheet.getLastRow() + 1;
-    
-    // Simpan foto absen masuk
+    // Kompres dan simpan foto
     var photoUrl = kompresidanSimpanFoto(photoDataUrl, nip, "masuk", now);
+    if (!photoUrl) {
+      throw new Error("Gagal menyimpan foto");
+    }
     
-    sheet.appendRow([
-      newId,          // ID
-      nip,            // NIP
-      date,           // Tanggal
-      time,           // Jam Masuk
-      "",             // Jam Pulang
-      statusKehadiran.status,  // Status
-      statusKehadiran.keterangan,  // Keterangan
-      photoUrl,       // Foto
-      gps,            // GPS
-      location,       // Lokasi
-      "",             // Foto Pulang
-      dayName,        // Hari Kerja (nama hari)
-      ""              // Total Jam Kerja
-    ]);
+    if (existingRow > 0) {
+      // Update baris yang sudah ada
+      var range = sheet.getRange(existingRow, 4, 1, 7);
+      range.setValues([[
+        time,                    // Jam Masuk
+        statusKehadiran.status,  // Status
+        statusKehadiran.keterangan, // Keterangan
+        photoUrl,                // Foto Masuk
+        gps,                     // GPS
+        location,                // Lokasi
+        jadwalKerja.namaHari    // Nama Hari
+      ]]);
+    } else {
+      // Buat entri baru
+      var newId = sheet.getLastRow() + 1;
+      sheet.appendRow([
+        newId,                    // ID
+        nip,                      // NIP
+        date,                     // Tanggal
+        time,                     // Jam Masuk
+        "",                       // Jam Pulang
+        statusKehadiran.status,   // Status
+        statusKehadiran.keterangan, // Keterangan
+        photoUrl,                 // Foto Masuk
+        gps,                      // GPS
+        location,                 // Lokasi
+        "",                       // Foto Pulang
+        jadwalKerja.namaHari,    // Nama Hari
+        ""                        // Total Jam Kerja
+      ]);
+    }
+    
+    // Log aktivitas
+    Logger.log("Absen masuk berhasil untuk NIP: " + nip + " pada: " + time);
     
     return { 
       success: true, 
@@ -1357,9 +1816,13 @@ function checkInWithPhoto(photoDataUrl, gps, location) {
       time: time, 
       status: statusKehadiran.status 
     };
+    
   } catch (error) {
     Logger.log("Error pada fungsi checkInWithPhoto: " + error.message);
-    return { success: false, message: "Terjadi kesalahan saat absen masuk: " + error.message };
+    return { 
+      success: false, 
+      message: "Terjadi kesalahan saat absen masuk: " + error.message 
+    };
   }
 }
 
@@ -1375,12 +1838,39 @@ function checkInWithPhoto(photoDataUrl, gps, location) {
 function checkOutWithPhoto(photoDataUrl, gps, location) {
   try {
     // Dapatkan user dari session
-    var user = getUserSession();
-    if (!user) {
+    var userSession = getUserSession();
+    if (!userSession) {
       return { success: false, message: "Sesi telah berakhir" };
     }
     
-    var nip = user.nip;
+    var nip = userSession.nip;
+    
+    // Validasi input
+    if (!photoDataUrl) {
+      return { success: false, message: "Foto tidak tersedia" };
+    }
+    
+    // Validasi GPS
+    if (!gps || gps.trim() === "") {
+      return { 
+        success: false, 
+        message: "Data GPS tidak tersedia. Pastikan lokasi diizinkan." 
+      };
+    }
+    
+    // Validasi format GPS
+    var gpsCoords = gps.split(',');
+    if (gpsCoords.length !== 2 || isNaN(gpsCoords[0]) || isNaN(gpsCoords[1])) {
+      return { 
+        success: false, 
+        message: "Format GPS tidak valid" 
+      };
+    }
+    
+    // Jika lokasi tidak ada, coba dapatkan dari koordinat
+    if (!location || location.trim() === "") {
+      location = getLocationAddress(gpsCoords[0], gpsCoords[1]);
+    }
     
     // Dapatkan informasi waktu saat ini
     var now = new Date();
@@ -1389,66 +1879,82 @@ function checkOutWithPhoto(photoDataUrl, gps, location) {
     
     // Dapatkan jadwal kerja untuk hari ini
     var jadwalKerja = getJadwalKerja(now);
+    if (!jadwalKerja) {
+      return { 
+        success: false, 
+        message: "Gagal mendapatkan jadwal kerja" 
+      };
+    }
     
     // Hitung status kehadiran
     var statusKehadiran = hitungStatusKehadiran(now, jadwalKerja, 'pulang');
     
+    // Dapatkan sheet attendance
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Attendance');
+    if (!sheet) {
+      throw new Error("Sheet Attendance tidak ditemukan");
+    }
     
     // Cek apakah sudah absen masuk hari ini
     var data = sheet.getDataRange().getValues();
-    var entryFound = false;
+    var rowIndex = -1;
     
+    // Cari data absensi hari ini
     for (var i = 1; i < data.length; i++) {
-      if (data[i][1] == nip && data[i][2] == date) {
-        entryFound = true;
+      if (data[i][1] === nip && data[i][2] === date) {
+        rowIndex = i + 1;
+        
+        // Cek jika sudah absen pulang
+        if (data[i][4] && data[i][4] !== "") {
+          return { 
+            success: false, 
+            message: "Anda sudah melakukan absen pulang hari ini" 
+          };
+        }
         
         // Pastikan sudah absen masuk
         if (!data[i][3] || data[i][3] === "") {
-          return { success: false, message: "Anda belum absen masuk hari ini" };
+          return { 
+            success: false, 
+            message: "Anda belum absen masuk hari ini" 
+          };
         }
-        
-        // Update jam pulang
-        sheet.getRange(i+1, 5).setValue(time);
-        
-        // Simpan foto pulang di kolom yang benar (kolom 11)
-        var photoUrl = kompresidanSimpanFoto(photoDataUrl, nip, "pulang", now);
-        sheet.getRange(i+1, 11).setValue(photoUrl);
-        
-        // Update GPS dan lokasi
-        sheet.getRange(i+1, 9).setValue(gps);
-        sheet.getRange(i+1, 10).setValue(location);
-        
-        // Update keterangan status pulang jika diperlukan
-        if (statusKehadiran.status === "Pulang Awal") {
-          sheet.getRange(i+1, 7).setValue(data[i][6] + " | " + statusKehadiran.keterangan);
-        }
-        
-        // Hitung dan simpan durasi
-        var waktuMasuk = data[i][3]; // Jam masuk
-        if (waktuMasuk) {
-          var totalJam = hitungDurasi(waktuMasuk, time);
-          
-          // Simpan total jam ke kolom 13
-          sheet.getRange(i+1, 13).setValue(totalJam);
-        }
-        
-        return { 
-          success: true, 
-          message: "Absen pulang berhasil", 
-          time: time 
-        };
+        break;
       }
     }
     
-    if (!entryFound) {
-      // Tidak ada absen masuk, buat entri baru absen pulang saja
-      var dayName = jadwalKerja.namaHari;
+    // Kompres dan simpan foto
+    var photoUrl = kompresidanSimpanFoto(photoDataUrl, nip, "pulang", now);
+    if (!photoUrl) {
+      throw new Error("Gagal menyimpan foto");
+    }
+    
+    if (rowIndex > 0) {
+      // Update data absensi yang sudah ada
+      var waktuMasuk = data[rowIndex-1][3]; // Jam masuk
+      var totalJam = hitungDurasi(waktuMasuk, time);
+      var keterangan = data[rowIndex-1][6];
+      
+      if (statusKehadiran.status === "Pulang Awal") {
+        keterangan = keterangan + " | " + statusKehadiran.keterangan;
+      }
+      
+      var range = sheet.getRange(rowIndex, 5, 1, 9);
+      range.setValues([[
+        time,           // Jam Pulang
+        gps,            // GPS
+        location,       // Lokasi
+        photoUrl,       // Foto Pulang
+        totalJam,       // Total Jam Kerja
+        keterangan,     // Update Keterangan
+        statusKehadiran.status, // Status Pulang
+        jadwalKerja.namaHari,   // Nama Hari
+        ""             // Kolom tambahan jika ada
+      ]]);
+      
+    } else {
+      // Buat entri baru untuk absen pulang saja
       var newId = sheet.getLastRow() + 1;
-      
-      // Simpan foto pulang
-      var photoUrl = kompresidanSimpanFoto(photoDataUrl, nip, "pulang", now);
-      
       sheet.appendRow([
         newId,                    // ID
         nip,                      // NIP
@@ -1461,21 +1967,75 @@ function checkOutWithPhoto(photoDataUrl, gps, location) {
         gps,                      // GPS
         location,                 // Lokasi
         photoUrl,                 // Foto Pulang
-        dayName,                  // Hari Kerja (nama hari)
+        jadwalKerja.namaHari,    // Nama Hari
         ""                        // Total Jam Kerja
       ]);
-      
-      return { 
-        success: true, 
-        message: "Absen pulang berhasil (tanpa absen masuk)", 
-        time: time 
-      };
     }
     
-    return { success: false, message: "Terjadi kesalahan saat mencari data absensi" };
+    // Log aktivitas
+    Logger.log("Absen pulang berhasil untuk NIP: " + nip + " pada: " + time);
+    
+    return { 
+      success: true, 
+      message: rowIndex > 0 ? "Absen pulang berhasil" : "Absen pulang berhasil (tanpa absen masuk)", 
+      time: time,
+      status: statusKehadiran.status 
+    };
+    
   } catch (error) {
     Logger.log("Error pada fungsi checkOutWithPhoto: " + error.message);
-    return { success: false, message: "Terjadi kesalahan saat absen pulang: " + error.message };
+    return { 
+      success: false, 
+      message: "Terjadi kesalahan saat absen pulang: " + error.message 
+    };
+  }
+}
+
+// Tambahkan fungsi ini untuk memeriksa dan meminta izin lokasi
+function requestLocationPermission() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        // Sukses mendapatkan lokasi
+        return {
+          success: true,
+          coords: {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          }
+        };
+      },
+      function(error) {
+        // Error mendapatkan lokasi
+        return {
+          success: false,
+          error: error.message
+        };
+      }
+    );
+  } else {
+    return {
+      success: false,
+      error: "Geolocation tidak didukung di browser ini"
+    };
+  }
+}
+
+function getLocationAddress(latitude, longitude) {
+  try {
+    var mapsApiKey = getMapsApiKey();
+    var response = UrlFetchApp.fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${mapsApiKey}`
+    );
+    var data = JSON.parse(response.getContentText());
+    
+    if (data.status === "OK" && data.results && data.results[0]) {
+      return data.results[0].formatted_address;
+    }
+    return "Lokasi tidak ditemukan";
+  } catch (error) {
+    Logger.log("Error getting location address: " + error.message);
+    return "Error: " + error.message;
   }
 }
 
@@ -1486,6 +2046,290 @@ function checkOutWithPhoto(photoDataUrl, gps, location) {
  * @param {number} year - Tahun
  * @return {Array} Array objek riwayat absensi
  */
+
+function getAttendanceHistory(startDate, endDate) {
+  try {
+    // Log awal eksekusi
+    Logger.log("Starting getAttendanceHistory execution");
+    Logger.log(`Parameters - startDate: ${startDate}, endDate: ${endDate}`);
+
+    // Validasi input
+    if (!startDate || !endDate) {
+      throw new Error("Parameter tanggal tidak lengkap");
+    }
+
+    // Get user session
+    const userSession = getUserSession();
+    if (!userSession || !userSession.nip) {
+      throw new Error("Sesi user tidak valid atau NIP tidak ditemukan");
+    }
+    Logger.log(`User session found - NIP: ${userSession.nip}`);
+
+    // Get spreadsheet and sheet
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName('Attendance');
+    if (!sheet) {
+      throw new Error("Sheet 'Attendance' tidak ditemukan");
+    }
+    Logger.log("Sheet 'Attendance' found");
+
+    // Get data range
+    const lastRow = sheet.getLastRow();
+    const lastColumn = sheet.getLastColumn();
+    if (lastRow <= 1) {
+      Logger.log("No attendance data found");
+      return {
+        success: true,
+        data: {
+          attendance: [],
+          summary: createEmptySummary(),
+          workHours: { dates: [], hours: [] }
+        }
+      };
+    }
+
+    // Get all data
+    const range = sheet.getRange(1, 1, lastRow, lastColumn);
+    const values = range.getValues();
+    Logger.log(`Retrieved ${values.length} rows of data`);
+
+    // Parse dates
+    const startDateTime = new Date(startDate);
+    const endDateTime = new Date(endDate);
+    startDateTime.setHours(0, 0, 0, 0);
+    endDateTime.setHours(23, 59, 59, 999);
+
+    // Filter and process data
+    const attendance = processAttendanceRecords(values, userSession.nip, startDateTime, endDateTime);
+    Logger.log(`Processed ${attendance.length} attendance records`);
+
+    // Calculate summary and work hours
+    const summary = calculateAttendanceSummary(attendance);
+    const workHours = calculateWorkHoursData(attendance);
+
+    return {
+      success: true,
+      data: {
+        attendance: attendance,
+        summary: summary,
+        workHours: workHours
+      }
+    };
+
+  } catch (error) {
+    const errorMessage = error.message || "Unknown error occurred";
+    Logger.log(`Error in getAttendanceHistory: ${errorMessage}`);
+    console.error("Full error details:", error);
+
+    return {
+      success: false,
+      message: `Gagal memuat data: ${errorMessage}`
+    };
+  }
+}
+
+function processAttendanceRecords(values, nip, startDate, endDate) {
+  const headers = values[0];
+  const records = [];
+
+  for (let i = 1; i < values.length; i++) {
+    try {
+      const row = values[i];
+      const recordDate = new Date(row[2]); // Assuming date is in column 3
+      
+      if (row[1] === nip && recordDate >= startDate && recordDate <= endDate) {
+        records.push({
+          date: formatDate(recordDate),
+          checkIn: row[3] || null,
+          checkOut: row[4] || null,
+          status: row[5] || "Tidak Ada Status",
+          keterangan: row[6] || "",
+          checkInPhoto: row[7] || null,
+          location: row[9] || null,
+          checkOutPhoto: row[10] || null,
+          totalHours: calculateTotalHours(row[3], row[4])
+        });
+      }
+    } catch (error) {
+      Logger.log(`Error processing row ${i}: ${error.message}`);
+      // Continue to next record
+    }
+  }
+
+  return records;
+}
+
+function calculateAttendanceSummary(attendance) {
+  try {
+    const totalWorkDays = attendance.length;
+    const onTimeCount = attendance.filter(r => r.status === "Hadir" || r.status === "Tepat Waktu").length;
+    const lateCount = attendance.filter(r => r.status === "Terlambat").length;
+    
+    let totalHours = 0;
+    let validDaysCount = 0;
+
+    attendance.forEach(record => {
+      if (record.totalHours && !isNaN(record.totalHours)) {
+        totalHours += record.totalHours;
+        validDaysCount++;
+      }
+    });
+
+    return {
+      totalWorkDays: totalWorkDays,
+      onTimeCount: onTimeCount,
+      lateCount: lateCount,
+      avgWorkHours: validDaysCount > 0 ? (totalHours / validDaysCount) : 0
+    };
+  } catch (error) {
+    Logger.log(`Error calculating summary: ${error.message}`);
+    return createEmptySummary();
+  }
+}
+
+function calculateWorkHoursData(attendance) {
+  try {
+    const dates = [];
+    const hours = [];
+
+    attendance.forEach(record => {
+      dates.push(formatDisplayDate(new Date(record.date)));
+      hours.push(record.totalHours || 0);
+    });
+
+    return { dates, hours };
+  } catch (error) {
+    Logger.log(`Error calculating work hours data: ${error.message}`);
+    return { dates: [], hours: [] };
+  }
+}
+
+function calculateTotalHours(checkIn, checkOut) {
+  if (!checkIn || !checkOut) return 0;
+  
+  try {
+    const [inHours, inMinutes] = checkIn.split(':').map(Number);
+    const [outHours, outMinutes] = checkOut.split(':').map(Number);
+    
+    const totalMinutes = (outHours * 60 + outMinutes) - (inHours * 60 + inMinutes);
+    return Math.max(0, totalMinutes / 60);
+  } catch (error) {
+    Logger.log(`Error calculating total hours: ${error.message}`);
+    return 0;
+  }
+}
+
+function createEmptySummary() {
+  return {
+    totalWorkDays: 0,
+    onTimeCount: 0,
+    lateCount: 0,
+    avgWorkHours: 0
+  };
+}
+
+function formatDate(date) {
+  try {
+    return Utilities.formatDate(date, "GMT+7", "yyyy-MM-dd");
+  } catch (error) {
+    Logger.log(`Error formatting date: ${error.message}`);
+    return date.toISOString().split('T')[0];
+  }
+}
+
+function formatDisplayDate(date) {
+  try {
+    return Utilities.formatDate(date, "GMT+7", "dd/MM");
+  } catch (error) {
+    Logger.log(`Error formatting display date: ${error.message}`);
+    return date.toLocaleDateString();
+  }
+}
+
+function calculateSummary(attendance) {
+  try {
+    const totalWorkDays = attendance.length;
+    
+    const onTimeCount = attendance.filter(record => 
+      record.status === "Hadir" || record.status === "Tepat Waktu").length;
+    
+    const lateCount = attendance.filter(record => 
+      record.status === "Terlambat").length;
+    
+    let totalHours = 0;
+    let validDaysCount = 0;
+    
+    attendance.forEach(record => {
+      if (record.totalHours) {
+        const hours = parseFloat(record.totalHours);
+        if (!isNaN(hours)) {
+          totalHours += hours;
+          validDaysCount++;
+        }
+      }
+    });
+    
+    const avgWorkHours = validDaysCount > 0 ? 
+      totalHours / validDaysCount : 0;
+    
+    return {
+      totalWorkDays,
+      onTimeCount,
+      lateCount,
+      avgWorkHours
+    };
+  } catch (error) {
+    Logger.log("Error in calculateSummary: " + error.message);
+    return {
+      totalWorkDays: 0,
+      onTimeCount: 0,
+      lateCount: 0,
+      avgWorkHours: 0
+    };
+  }
+}
+
+function calculateWorkHours(attendance) {
+  try {
+    const dates = [];
+    const hours = [];
+    
+    attendance.forEach(record => {
+      const date = record.date;
+      const totalHours = record.totalHours ? 
+        parseFloat(record.totalHours) : 0;
+      
+      if (!isNaN(totalHours)) {
+        dates.push(formatDisplayDate(new Date(date)));
+        hours.push(totalHours);
+      }
+    });
+    
+    return { dates, hours };
+  } catch (error) {
+    Logger.log("Error in calculateWorkHours: " + error.message);
+    return { dates: [], hours: [] };
+  }
+}
+
+function formatDate(date) {
+  try {
+    return Utilities.formatDate(date, "GMT+7", "yyyy-MM-dd");
+  } catch (error) {
+    Logger.log("Error formatting date: " + error.message);
+    return date.toISOString().split('T')[0];
+  }
+}
+
+function formatDisplayDate(date) {
+  try {
+    return Utilities.formatDate(date, "GMT+7", "dd/MM");
+  } catch (error) {
+    Logger.log("Error formatting display date: " + error.message);
+    return date.toLocaleDateString();
+  }
+}
+
 function getAttendanceHistory(nip, month, year) {
   try {
     // Jika tidak ada nip, ambil dari session
